@@ -34,7 +34,7 @@ export const WindowCard: React.FC<WindowCardProps> = ({
   };
 
   const lineCountDelta =
-    w.current_line_count !== undefined && w.anchored_line_count !== undefined
+    w.current_line_count != null && w.anchored_line_count != null
       ? w.current_line_count - w.anchored_line_count
       : 0;
 
@@ -140,18 +140,16 @@ export const WindowCard: React.FC<WindowCardProps> = ({
               </span>
               <span
                 className={`font-semibold block truncate ${
-                  isTampered ? "text-[#BA4A38]" : "text-[#2E7D5B]"
+                  isTampered ? "text-[#BA4A38]" : w.current_log_hash ? "text-[#2E7D5B]" : "text-[#857E76]"
                 }`}
-                title={w.current_log_hash || w.anchored_log_hash}
+                title={w.current_log_hash ? w.current_log_hash : "window deleted from log"}
               >
-                {shortHash(w.current_log_hash || w.anchored_log_hash, 6, 6)}
+                {w.current_log_hash ? shortHash(w.current_log_hash, 6, 6) : "deleted"}
               </span>
             </div>
-            {(w.current_log_hash || w.anchored_log_hash) && (
+            {w.current_log_hash && (
               <button
-                onClick={(e) =>
-                  handleCopy(e, (w.current_log_hash || w.anchored_log_hash)!, "log")
-                }
+                onClick={(e) => handleCopy(e, w.current_log_hash!, "log")}
                 className="liquid-glass-btn w-7 h-7 p-0 rounded-full flex items-center justify-center text-[#7E756B] hover:text-[#2A2421] transition-all cursor-pointer shadow-xs"
                 title="Copy Full Log SHA-256 Hash"
               >
@@ -181,8 +179,9 @@ export const WindowCard: React.FC<WindowCardProps> = ({
                 lineCountDelta !== 0 ? "text-[#BA4A38] font-bold" : "text-[#2A2421]"
               }`}
             >
-              Current {w.current_line_count ?? w.anchored_line_count ?? 4}
-              {lineCountDelta !== 0 && ` (${lineCountDelta > 0 ? `+${lineCountDelta}` : lineCountDelta})`}
+              {w.current_line_count != null
+                ? `Current ${w.current_line_count}${lineCountDelta !== 0 ? ` (${lineCountDelta > 0 ? `+${lineCountDelta}` : lineCountDelta})` : ""}`
+                : "Current 0 (deleted)"}
             </span>
           </div>
 

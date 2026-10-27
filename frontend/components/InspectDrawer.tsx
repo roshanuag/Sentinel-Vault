@@ -168,7 +168,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
                   isTampered ? "text-[#BA4A38]" : "text-[#2E7D5B]"
                 }`}
               >
-                {w.current_log_hash || w.anchored_log_hash || "N/A"}
+                {w.current_log_hash ? w.current_log_hash : "— (window deleted from log)"}
               </div>
             </div>
 
@@ -223,7 +223,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
                     : "text-[#2A2421]"
                 }`}
               >
-                {w.current_line_count ?? w.anchored_line_count ?? 4} lines
+                {w.current_line_count != null ? `${w.current_line_count} lines` : "0 lines (deleted)"}
               </span>
             </div>
           </div>

@@ -17,7 +17,7 @@ Common fields:
 - A **window** is a fixed time slice of logs (default 5 minutes).
 - `window_id` is the window's start time in ISO format (e.g. `"2026-10-27T10:00:00"`) and is the stable identifier.
 - A **hash** is a 64-character SHA-256 hex string.
-- Per-window `status` is one of: `INTACT`, `TAMPERED`, `MISSING`, `UNANCHORED`.
+- Per-window `status` is one of: `INTACT`, `TAMPERED`, `MISSING`, `UNANCHORED`, `LEDGER_TAMPERED` (the anchored record itself was altered — its stored chain hash no longer matches its stored fields).
 
 ---
 
@@ -97,7 +97,7 @@ Re-read the current log, fingerprint it the same way, and compare each window ag
   "ledger_type": "local",
   "overall_status": "COMPROMISED",
   "checked_at": "2026-10-27T12:40:00.000000+00:00",
-  "summary": { "intact": 2, "tampered": 1, "missing": 0, "unanchored": 0 },
+  "summary": { "intact": 2, "tampered": 1, "missing": 0, "unanchored": 0, "ledger_tampered": 0 },
   "first_break": {
     "index": 0,
     "window_id": "2026-10-27T10:00:00",
@@ -131,7 +131,7 @@ Re-read the current log, fingerprint it the same way, and compare each window ag
 - For a `MISSING` window, `current_log_hash` and `current_line_count` are `null`.
 - For an `UNANCHORED` window, `anchored_log_hash`, `anchored_line_count`, and `anchored_at` are `null`.
 
-**Suggested dashboard colours:** `INTACT` = green, `TAMPERED` = red, `MISSING` = grey/black, `UNANCHORED` = amber.
+**Suggested dashboard colours:** `INTACT` = green, `TAMPERED` = red, `MISSING` = grey/black, `UNANCHORED` = amber, `LEDGER_TAMPERED` = purple.
 
 **Errors:**
 - `400` — log file missing or invalid (same shape as `/api/anchor`).

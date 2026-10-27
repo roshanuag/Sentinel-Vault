@@ -16,6 +16,7 @@ It also pinpoints the FIRST window where the chain breaks - the exact index and
 timestamp an investigator should look at.
 """
 
+import hashlib
 from datetime import datetime, timezone
 
 from collector import collect_windows, build_chain, DEFAULT_WINDOW_SECONDS
@@ -43,7 +44,8 @@ def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
         return {
             **base,
             "overall_status": "NO_ANCHORS",
-            "summary": {"intact": 0, "tampered": 0, "missing": 0, "unanchored": 0},
+            "summary": {"intact": 0, "tampered": 0, "missing": 0,
+                        "unanchored": 0, "ledger_tampered": 0},
             "first_break": None,
             "chain_broken_from": None,
             "windows": [],
@@ -55,7 +57,8 @@ def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
     current_by_id = {r["window_start"]: r for r in records}
     anchored_ids = {a["window_id"] for a in anchored}
 
-    summary = {"intact": 0, "tampered": 0, "missing": 0, "unanchored": 0}
+    summary = {"intact": 0, "tampered": 0, "missing": 0,
+               "unanchored": 0, "ledger_tampered": 0}
     result_windows = []
     first_break = None
 
@@ -64,7 +67,20 @@ def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
         window_id = a["window_id"]
         cur = current_by_id.get(window_id)
 
-        if cur is None:
+        # Ledger self-check: the stored record must be internally consistent
+        # (its chain_hash must equal SHA-256(prev_hash | start_time | log_hash)).
+        # If not, the anchored record itself was altered, so we can't trust it.
+        expected_chain = hashlib.sha256(
+            f"{a['prev_hash']}|{a['start_time']}|{a['log_hash']}".encode("utf-8")
+        ).hexdigest()
+
+        if a["chain_hash"] != expected_chain:
+            status = "LEDGER_TAMPERED"
+            current_hash = cur["log_hash"] if cur else None
+            current_lines = cur["line_count"] if cur else None
+            detail = ("The anchored record itself is inconsistent - this window's "
+                      "stored fingerprint was altered in the ledger.")
+        elif cur is None:
             status = "MISSING"
             current_hash = None
             current_lines = None
@@ -139,21 +155,23 @@ def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
     # overwritten), then attach first_noticed_at to every window for the response.
     now = datetime.now(timezone.utc).isoformat()
     newly_flagged = [
-        w["window_id"] for w in result_windows if w["status"] in ("TAMPERED", "MISSING")
+        w["window_id"] for w in result_windows
+        if w["status"] in ("TAMPERED", "MISSING", "LEDGER_TAMPERED")
     ]
     ledger.record_first_noticed(newly_flagged, now, db_path=anchor.store_path)
     first_noticed = ledger.get_incidents(anchor.store_path)
     for w in result_windows:
         w["first_noticed_at"] = first_noticed.get(w["window_id"])
 
-    compromised = summary["tampered"] > 0 or summary["missing"] > 0
+    compromised = (summary["tampered"] > 0 or summary["missing"] > 0
+                   or summary["ledger_tampered"] > 0)
     overall_status = "COMPROMISED" if compromised else "INTACT"
 
-    # Simulated SOC incident-response alerting: log each tampered/missing window
-    # to the console as a mock webhook to the security team.
+    # Simulated SOC incident-response alerting: log each compromised window to the
+    # console as a mock webhook to the security team.
     if compromised:
         for w in result_windows:
-            if w["status"] in ("TAMPERED", "MISSING"):
+            if w["status"] in ("TAMPERED", "MISSING", "LEDGER_TAMPERED"):
                 print(
                     f"[SOC ALERT] CRITICAL: {w['status']} detected in Window "
                     f"{w['index']} ({w['start_time']}). "

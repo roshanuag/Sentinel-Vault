@@ -7,7 +7,7 @@ import { CommandBar } from "./components/CommandBar";
 import { TamperConsole } from "./components/TamperConsole";
 import { Timeline } from "./components/Timeline";
 import { InspectDrawer } from "./components/InspectDrawer";
-import { api, WindowObject, VerifyResponse, MOCK_MODE } from "./lib/api";
+import { api, WindowObject, VerifyResponse, TamperResponse, MOCK_MODE } from "./lib/api";
 import { playSuccess, playAlarm } from "./lib/sound";
 import { Shield, Sparkles } from "lucide-react";
 
@@ -31,12 +31,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>("System initialized and ready for verification.");
   const [selectedWindow, setSelectedWindow] = useState<WindowObject | null>(null);
-  const [lastTamperResult, setLastTamperResult] = useState<{
-    window_index: number;
-    action: "modify" | "delete";
-    before?: string;
-    after?: string;
-  } | null>(null);
+  const [lastTamperResult, setLastTamperResult] = useState<TamperResponse | null>(null);
+  const [anchorChainTip, setAnchorChainTip] = useState<string | null>(null);
 
   // Apply verify payload to state
   const applyVerifyData = useCallback((data: VerifyResponse) => {
@@ -85,6 +81,7 @@ export default function App() {
     setMessage("Computing SHA-256 fingerprints and anchoring to append-only ledger...");
     try {
       const res = await api.anchor();
+      setAnchorChainTip(res.chain_tip ?? null);
       setMessage(`Successfully anchored ${res.newly_anchored} new time windows (total ${res.total_windows}) to ${mode.mock ? "Local SQLite (Triggers)" : "EVM Blockchain"}.`);
       playSuccess();
       const verifyData = await api.verify();
@@ -123,22 +120,21 @@ export default function App() {
   };
 
   // Handler: Tamper Demo
-  const handleTamper = async (windowIndex: number, action: "modify" | "delete") => {
+  const handleTamper = async (windowIndex: number, action: "modify" | "delete" | "delete_window") => {
     setBusy("tamper");
     setError(null);
     setMessage(`Executing attacker breach on Window ${windowIndex} (${action})...`);
     try {
       const tamperRes = await api.tamper(windowIndex, action);
-      setLastTamperResult({
-        window_index: windowIndex,
-        action,
-        before: tamperRes.before,
-        after: tamperRes.after,
-      });
+      setLastTamperResult(tamperRes);
 
       const verifyData = await api.verify();
       applyVerifyData(verifyData);
-      setMessage(`Attacker ${action} executed on Window ${windowIndex}. Cryptographic chain flagged TAMPERED!`);
+      setMessage(
+        action === "delete_window"
+          ? `Attacker removed all lines of Window ${windowIndex}. Re-verified (expect MISSING).`
+          : `Attacker ${action} executed on Window ${windowIndex}. Re-verified.`
+      );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Tamper execution failed: ${msg}`);
@@ -156,6 +152,7 @@ export default function App() {
     try {
       await api.reset();
       setLastTamperResult(null);
+      setAnchorChainTip(null);
       setMessage("Demo logs restored to original clean state. Re-verifying...");
       const verifyData = await api.verify();
       applyVerifyData(verifyData);
@@ -169,7 +166,7 @@ export default function App() {
     }
   };
 
-  const chainTip = windows.length > 0 ? windows[windows.length - 1].chain_hash || null : null;
+  const chainTip = anchorChainTip || (windows.length > 0 ? windows[windows.length - 1].chain_hash || null : null);
 
   return (
     <div className="min-h-screen bg-[#F7F4EE] text-[#2A2421] vintage-paper-bg relative selection:bg-[#A07855]/20 selection:text-[#A07855] scroll-smooth font-sans">

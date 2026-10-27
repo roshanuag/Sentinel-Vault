@@ -19,6 +19,7 @@ export const WindowCard: React.FC<WindowCardProps> = ({
 
   const theme = getStatusTheme(w.status);
   const isTampered = w.status === "TAMPERED";
+  const isLedgerTampered = w.status === "LEDGER_TAMPERED";
   const isMissing = w.status === "MISSING";
   const isIntact = w.status === "INTACT";
 
@@ -77,6 +78,8 @@ export const WindowCard: React.FC<WindowCardProps> = ({
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider liquid-glass-pill ${
                 isTampered
                   ? "text-[#BA4A38] border border-[#BA4A38]/40 shadow-sm"
+                  : isLedgerTampered
+                  ? "text-[#7D6B9C] border border-[#7D6B9C]/40 shadow-sm"
                   : isIntact
                   ? "text-[#2E7D5B] border border-[#2E7D5B]/30"
                   : isMissing
@@ -84,7 +87,7 @@ export const WindowCard: React.FC<WindowCardProps> = ({
                   : "text-[#B87720] border border-[#B87720]/30"
               }`}
             >
-              {isTampered ? (
+              {isTampered || isLedgerTampered ? (
                 <ShieldAlert className="w-3 h-3" />
               ) : isIntact ? (
                 <ShieldCheck className="w-3 h-3" />
@@ -189,8 +192,11 @@ export const WindowCard: React.FC<WindowCardProps> = ({
         </div>
 
         {/* Forensic reason summary if tampered */}
-        {isTampered && w.detail && (
-          <div className="mt-3 p-3 rounded-xl liquid-glass-inner border border-[#BA4A38]/30 text-xs font-mono text-[#BA4A38] font-semibold">
+        {(isTampered || isLedgerTampered) && w.detail && (
+          <div
+            className="mt-3 p-3 rounded-xl liquid-glass-inner border text-xs font-mono font-semibold"
+            style={{ borderColor: theme.border, color: theme.color }}
+          >
             {w.detail}
           </div>
         )}

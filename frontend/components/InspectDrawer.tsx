@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { X, Copy, Check, ShieldAlert, ShieldCheck, Hash, FileCode, Clock, Link2, AlertCircle } from "lucide-react";
 import { WindowObject } from "../lib/api";
-import { getStatusTheme, formatTimeRange, copyToClipboard } from "../lib/ui";
+import { getStatusTheme, formatTimeRange, formatLocalDateTime, copyToClipboard } from "../lib/ui";
 import { playClick } from "../lib/sound";
 
 interface InspectDrawerProps {
@@ -27,6 +27,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
 
   const theme = getStatusTheme(w.status);
   const isTampered = w.status === "TAMPERED";
+  const isLedgerTampered = w.status === "LEDGER_TAMPERED";
 
   const handleCopy = async (text: string, key: string) => {
     playClick();
@@ -54,7 +55,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
                 color: theme.color,
               }}
             >
-              {isTampered ? <ShieldAlert className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+              {isTampered || isLedgerTampered ? <ShieldAlert className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -95,13 +96,16 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 font-mono text-xs">
           {/* Forensic Verdict Alert */}
-          {isTampered && (
-            <div className="p-4 rounded-xl liquid-glass-inner border border-[#BA4A38]/40 text-[#BA4A38] space-y-1 shadow-sm">
+          {(isTampered || isLedgerTampered) && (
+            <div
+              className="p-4 rounded-xl liquid-glass-inner border space-y-1 shadow-sm"
+              style={{ borderColor: theme.border, color: theme.color }}
+            >
               <div className="flex items-center gap-2 font-bold text-sm">
                 <AlertCircle className="w-4 h-4" />
-                <span>INTEGRITY VIOLATION DETECTED</span>
+                <span>{isLedgerTampered ? "LEDGER RECORD TAMPERED" : "INTEGRITY VIOLATION DETECTED"}</span>
               </div>
-              <p className="text-xs text-[#BA4A38]/95 font-medium">
+              <p className="text-xs font-medium" style={{ color: theme.color }}>
                 {w.detail || "Cryptographic fingerprint does not match anchored record on ledger."}
               </p>
             </div>
@@ -222,6 +226,27 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
             </div>
           </div>
 
+          {/* Provenance timestamps (local time) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] shadow-sm">
+              <span className="text-[10px] text-[#7E756B] uppercase block mb-1 font-sans">
+                Originally recorded
+              </span>
+              <span className="text-xs font-semibold text-[#2A2421]">
+                {formatLocalDateTime(w.anchored_at)}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] shadow-sm">
+              <span className="text-[10px] text-[#7E756B] uppercase block mb-1 font-sans">
+                First noticed
+              </span>
+              <span className="text-xs font-semibold text-[#2A2421]">
+                {formatLocalDateTime(w.first_noticed_at)}
+              </span>
+            </div>
+          </div>
+
           {/* Log Lines Preview */}
           <div className="space-y-2">
             <h4 className="text-[11px] uppercase tracking-wider text-[#7E756B] font-bold flex items-center gap-1.5 font-sans">
@@ -267,7 +292,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
         <div className="p-4 border-t border-[#D5CDBD] liquid-glass-inner rounded-none flex items-center justify-between">
           <div className="text-[11px] text-[#7E756B] font-mono flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-[#A07855]" />
-            <span>Anchored: {w.anchored_at || "2026-10-27T10:05:01Z"}</span>
+            <span>Originally recorded: {formatLocalDateTime(w.anchored_at)}</span>
           </div>
 
           <button

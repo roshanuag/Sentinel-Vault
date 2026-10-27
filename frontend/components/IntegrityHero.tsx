@@ -16,6 +16,7 @@ interface IntegrityHeroProps {
     tampered: number;
     missing: number;
     unanchored: number;
+    ledger_tampered: number;
   };
   ledgerType: "local" | "testnet" | "mainnet";
   busy: boolean;
@@ -195,6 +196,29 @@ export const IntegrityHero: React.FC<IntegrityHeroProps> = ({
               }`}
             >
               {summary.tampered}
+            </span>
+          </div>
+
+          {/* Ledger Tampered */}
+          <div
+            className={`flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl border backdrop-blur-md transition-all shadow-2xs ${
+              summary.ledger_tampered > 0
+                ? "bg-[#7D6B9C]/10 border-[#7D6B9C]/40 text-[#7D6B9C]"
+                : "bg-white/70 border-[#D5CDBD]/60 text-[#7E756B]"
+            }`}
+          >
+            <span className="flex items-center gap-2 text-xs font-mono">
+              <Lock className={`w-4 h-4 ${summary.ledger_tampered > 0 ? "text-[#7D6B9C]" : "text-[#7E756B]"}`} />
+              Ledger Tampered
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${
+                summary.ledger_tampered > 0
+                  ? "bg-[#7D6B9C]/20 text-[#7D6B9C] border border-[#7D6B9C]/40"
+                  : "bg-black/[0.05] text-[#2A2421] border border-[#D5CDBD]/60"
+              }`}
+            >
+              {summary.ledger_tampered}
             </span>
           </div>
 

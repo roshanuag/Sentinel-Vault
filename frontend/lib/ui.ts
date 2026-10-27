@@ -1,5 +1,5 @@
 export type IntegrityVerdict = "INTACT" | "COMPROMISED" | "NO_ANCHORS";
-export type WindowStatus = "INTACT" | "TAMPERED" | "MISSING" | "UNANCHORED";
+export type WindowStatus = "INTACT" | "TAMPERED" | "MISSING" | "UNANCHORED" | "LEDGER_TAMPERED";
 
 export const STATUS_COLORS = {
   INTACT: "#2E7D5B",        // Antique Sage Green
@@ -7,6 +7,7 @@ export const STATUS_COLORS = {
   COMPROMISED: "#BA4A38",   // Vintage Rust Red
   MISSING: "#857E76",       // Warm Stone Gray
   UNANCHORED: "#B87720",    // Antique Ochre
+  LEDGER_TAMPERED: "#7D6B9C", // Dusty Purple
   NO_ANCHORS: "#B87720",    // Antique Ochre
   BLOCKCHAIN: "#7D6B9C",    // Dusty Purple
   PRIMARY: "#A07855",       // Caramel Brown
@@ -39,6 +40,17 @@ export function getStatusTheme(status: string | null | undefined) {
         bgClass: "bg-[#BA4A38]/10",
         label: "TAMPERED",
         glow: "0 0 20px rgba(186, 74, 56, 0.2)",
+      };
+    case "LEDGER_TAMPERED":
+      return {
+        color: "#7D6B9C",
+        bg: "rgba(125, 107, 156, 0.08)",
+        border: "rgba(125, 107, 156, 0.4)",
+        text: "text-[#7D6B9C]",
+        borderClass: "border-[#7D6B9C]/40",
+        bgClass: "bg-[#7D6B9C]/10",
+        label: "LEDGER TAMPERED",
+        glow: "0 0 18px rgba(125, 107, 156, 0.2)",
       };
     case "MISSING":
       return {
@@ -93,6 +105,20 @@ export function formatIsoTime(iso: string | null | undefined): string {
 export function formatTimeRange(startIso: string | null | undefined, endIso: string | null | undefined): string {
   if (!startIso || !endIso) return "00:00:00 – 00:05:00";
   return `${formatIsoTime(startIso)} – ${formatIsoTime(endIso)}`;
+}
+
+/**
+ * Format an ISO timestamp as local date + time; returns "—" when null/invalid.
+ */
+export function formatLocalDateTime(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleString([], { hour12: false });
+  } catch {
+    return "—";
+  }
 }
 
 /**

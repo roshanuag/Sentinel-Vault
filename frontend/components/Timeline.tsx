@@ -16,7 +16,7 @@ export const Timeline: React.FC<TimelineProps> = ({
   onSelectWindow,
   selectedWindow,
 }) => {
-  const [filter, setFilter] = useState<"ALL" | "INTACT" | "TAMPERED" | "MISSING">("ALL");
+  const [filter, setFilter] = useState<"ALL" | "INTACT" | "TAMPERED" | "MISSING" | "LEDGER_TAMPERED">("ALL");
 
   const filteredWindows = windows.filter((w) => {
     if (filter === "ALL") return true;
@@ -26,6 +26,7 @@ export const Timeline: React.FC<TimelineProps> = ({
   const intactCount = windows.filter((w) => w.status === "INTACT").length;
   const tamperedCount = windows.filter((w) => w.status === "TAMPERED").length;
   const missingCount = windows.filter((w) => w.status === "MISSING").length;
+  const ledgerTamperedCount = windows.filter((w) => w.status === "LEDGER_TAMPERED").length;
 
   return (
     <div className="space-y-4">
@@ -102,6 +103,23 @@ export const Timeline: React.FC<TimelineProps> = ({
             >
               <span>Missing</span>
               <span className="btn-icon w-4 h-4 text-[10px]">{missingCount}</span>
+            </button>
+          )}
+
+          {ledgerTamperedCount > 0 && (
+            <button
+              onClick={() => {
+                playClick();
+                setFilter("LEDGER_TAMPERED");
+              }}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+                filter === "LEDGER_TAMPERED"
+                  ? "liquid-glass-btn font-semibold text-[#7D6B9C] shadow-xs"
+                  : "liquid-glass-btn text-[#7E756B] hover:text-[#7D6B9C]"
+              }`}
+            >
+              <span>Ledger Tampered</span>
+              <span className="btn-icon w-4 h-4 text-[10px] text-[#7D6B9C]">{ledgerTamperedCount}</span>
             </button>
           )}
         </div>

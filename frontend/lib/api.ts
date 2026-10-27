@@ -27,7 +27,7 @@ export interface WindowObject {
   window_id: string;
   start_time: string;
   end_time: string;
-  status?: "INTACT" | "TAMPERED" | "MISSING" | "UNANCHORED";
+  status?: "INTACT" | "TAMPERED" | "MISSING" | "UNANCHORED" | "LEDGER_TAMPERED";
   log_hash?: string;
   anchored_log_hash?: string;
   current_log_hash?: string;
@@ -36,7 +36,8 @@ export interface WindowObject {
   line_count?: number;
   anchored_line_count?: number;
   current_line_count?: number;
-  anchored_at?: string;
+  anchored_at?: string | null;
+  first_noticed_at?: string | null;
   detail?: string;
   raw_lines?: string[];
   tampered_line?: string;
@@ -66,12 +67,13 @@ export interface VerifyResponse {
 
 export interface TamperResponse {
   mock: boolean;
-  status: string;
-  window_index: number;
-  action: "modify" | "delete";
-  before?: string;
-  after?: string;
-  message?: string;
+  action: "modify" | "delete" | "delete_window";
+  target_window_index: number;
+  target_window_id: string;
+  line_changed: { line_number: number; before: string; after: string | null } | null;
+  lines_removed?: number;
+  removed_lines?: string[];
+  note?: string;
 }
 
 const API_BASE = (import.meta as unknown as { env?: { VITE_API_BASE?: string } })?.env?.VITE_API_BASE || "http://localhost:8000";
@@ -306,17 +308,36 @@ class MockEngine {
     };
   }
 
-  tamper(windowIndex: number, action: "modify" | "delete"): TamperResponse {
+  tamper(windowIndex: number, action: "modify" | "delete" | "delete_window"): TamperResponse {
     const lines = this.currentLogs[windowIndex];
     if (!lines || lines.length === 0) {
       throw new Error(`Window ${windowIndex} not found or has no log lines.`);
     }
+    const targetWindowId = INITIAL_WINDOWS[windowIndex]?.window_id ?? String(windowIndex);
+
+    if (action === "delete_window") {
+      const removed = [...lines];
+      this.currentLogs[windowIndex] = [];
+      this.tamperHistory[windowIndex] = { before: removed.join("\n"), after: "(window deleted)", action };
+      return {
+        mock: this.mode.mock,
+        action,
+        target_window_index: windowIndex,
+        target_window_id: targetWindowId,
+        line_changed: null,
+        lines_removed: removed.length,
+        removed_lines: removed,
+        note: "The entire window was removed from the log. Run Verify; this window will show MISSING.",
+      };
+    }
 
     let before = "";
-    let after = "";
+    let after: string | null = "";
+    let lineNumber = 1;
 
     if (action === "modify") {
       const targetIdx = 0;
+      lineNumber = targetIdx + 1;
       before = lines[targetIdx];
       after = before.replace("AUTH: root login successful", "AUTH: normal user login")
                     .replace("privilege escalation", "scheduled cron job")
@@ -326,21 +347,21 @@ class MockEngine {
       }
       lines[targetIdx] = after;
     } else {
-      // delete line
+      // delete a single line (the last one)
+      lineNumber = lines.length;
       before = lines.pop() || "";
-      after = "(LINE_DELETED_BY_ATTACKER)";
+      after = null;
     }
 
-    this.tamperHistory[windowIndex] = { before, after, action };
+    this.tamperHistory[windowIndex] = { before, after: after ?? "(line deleted)", action };
 
     return {
       mock: this.mode.mock,
-      status: "tampered",
-      window_index: windowIndex,
       action,
-      before,
-      after,
-      message: `Window ${windowIndex} ${action === "modify" ? "modified" : "line deleted"} successfully.`,
+      target_window_index: windowIndex,
+      target_window_id: targetWindowId,
+      line_changed: { line_number: lineNumber, before, after },
+      note: "The log file was altered. Run Verify to detect it.",
     };
   }
 }
@@ -428,6 +449,7 @@ export const api = {
         newly_anchored: INITIAL_WINDOWS.length,
         already_anchored: 0,
         total_windows: INITIAL_WINDOWS.length,
+        chain_tip: mockEngine.anchoredChainHashes[INITIAL_WINDOWS.length - 1],
       };
     }
     let res: Response;
@@ -472,7 +494,7 @@ export const api = {
   /**
    * Tamper simulation: POST /api/tamper-demo
    */
-  async tamper(windowIndex: number, action: "modify" | "delete"): Promise<TamperResponse> {
+  async tamper(windowIndex: number, action: "modify" | "delete" | "delete_window"): Promise<TamperResponse> {
     if (MOCK_MODE) return mockEngine.tamper(windowIndex, action);
     let res: Response;
     try {

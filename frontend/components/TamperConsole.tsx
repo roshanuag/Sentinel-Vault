@@ -1,18 +1,13 @@
 import React, { useState } from "react";
 import { Skull, AlertTriangle, Play, Terminal, Edit3, Trash2 } from "lucide-react";
 import { playClick } from "../lib/sound";
-import { WindowObject } from "../lib/api";
+import { WindowObject, TamperResponse } from "../lib/api";
 
 interface TamperConsoleProps {
   windows: WindowObject[];
   busy: "anchor" | "verify" | "tamper" | "reset" | null;
-  onTamper: (windowIndex: number, action: "modify" | "delete") => void;
-  lastTamperResult: {
-    window_index: number;
-    action: "modify" | "delete";
-    before?: string;
-    after?: string;
-  } | null;
+  onTamper: (windowIndex: number, action: "modify" | "delete" | "delete_window") => void;
+  lastTamperResult: TamperResponse | null;
 }
 
 export const TamperConsole: React.FC<TamperConsoleProps> = ({
@@ -22,7 +17,7 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
   lastTamperResult,
 }) => {
   const [selectedWindow, setSelectedWindow] = useState<number>(0);
-  const [action, setAction] = useState<"modify" | "delete">("modify");
+  const [action, setAction] = useState<"modify" | "delete" | "delete_window">("modify");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +116,22 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
               </span>
               <span>Delete Log Line</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setAction("delete_window")}
+              disabled={isBusy}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                action === "delete_window"
+                  ? "liquid-glass-destructive shadow-xs"
+                  : "liquid-glass-btn text-[#7E756B] hover:text-[#2A2421]"
+              }`}
+            >
+              <span className={`btn-icon w-5 h-5 ${action === "delete_window" ? "bg-black/40 text-white" : "text-white"}`}>
+                <Trash2 className="w-3 h-3" />
+              </span>
+              <span>Delete Whole Window</span>
+            </button>
           </div>
         </div>
 
@@ -144,28 +155,58 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
         <div className="mt-4 pt-3 border-t border-[#D5CDBD] font-mono text-xs">
           <div className="flex items-center gap-2 mb-2 text-[#BA4A38] font-semibold">
             <Terminal className="w-3.5 h-3.5" />
-            <span>Attack Execution Log — Target: Window {lastTamperResult.window_index}</span>
+            <span>
+              Attack Execution Log — Target: Window {lastTamperResult.target_window_index} ({lastTamperResult.action})
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 rounded-xl liquid-glass-inner">
-            <div>
-              <span className="text-[10px] uppercase text-[#7E756B] block mb-1">
-                Before Attack (Anchored):
+          {lastTamperResult.action === "delete_window" ? (
+            <div className="p-3.5 rounded-xl liquid-glass-inner space-y-2">
+              <span className="text-[10px] uppercase text-[#BA4A38] block font-bold">
+                Entire window removed · {lastTamperResult.lines_removed ?? 0} lines deleted
               </span>
-              <div className="text-[#7E756B] liquid-glass-inner p-2.5 rounded-lg truncate">
-                {lastTamperResult.before || "Original forensic log record"}
+              <div className="space-y-1">
+                {(lastTamperResult.removed_lines ?? []).map((line, idx) => (
+                  <div
+                    key={idx}
+                    className="text-[#BA4A38] liquid-glass-inner p-2 rounded-lg truncate"
+                    title={line}
+                  >
+                    {line}
+                  </div>
+                ))}
               </div>
+              {lastTamperResult.note && (
+                <span className="text-[10px] text-[#7E756B] block">{lastTamperResult.note}</span>
+              )}
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 rounded-xl liquid-glass-inner">
+              <div>
+                <span className="text-[10px] uppercase text-[#7E756B] block mb-1">
+                  Before (line {lastTamperResult.line_changed?.line_number ?? "?"}):
+                </span>
+                <div
+                  className="text-[#7E756B] liquid-glass-inner p-2.5 rounded-lg truncate"
+                  title={lastTamperResult.line_changed?.before}
+                >
+                  {lastTamperResult.line_changed?.before || "—"}
+                </div>
+              </div>
 
-            <div>
-              <span className="text-[10px] uppercase text-[#BA4A38] block mb-1 font-bold">
-                After Attack (Manipulated on disk):
-              </span>
-              <div className="text-[#BA4A38] liquid-glass-inner p-2.5 rounded-lg truncate font-semibold">
-                {lastTamperResult.after || "Altered log entry"}
+              <div>
+                <span className="text-[10px] uppercase text-[#BA4A38] block mb-1 font-bold">
+                  After (on disk):
+                </span>
+                <div
+                  className="text-[#BA4A38] liquid-glass-inner p-2.5 rounded-lg truncate font-semibold"
+                  title={lastTamperResult.line_changed?.after ?? "(line deleted)"}
+                >
+                  {lastTamperResult.line_changed?.after ?? "(line deleted)"}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

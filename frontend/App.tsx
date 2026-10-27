@@ -50,6 +50,34 @@ export default function App() {
     }
   }, []);
 
+  // Clear the forensic view (verdict + windows). Used when an action fails so no stale data lingers.
+  const clearForensicState = useCallback(() => {
+    setOverall(null);
+    setSummary({ intact: 0, tampered: 0, missing: 0, unanchored: 0, ledger_tampered: 0 });
+    setFirstBreak(null);
+    setChainBrokenFrom(null);
+    setWindows([]);
+    setAnchorChainTip(null);
+  }, []);
+
+  // Apply verify data, then merge per-window chain_hash from GET /api/windows.
+  // The verify response has no chain_hash; GET /api/windows does. If that fetch
+  // fails, windows keep whatever they had (chain boxes hide if no real hash).
+  const applyVerifyWithChain = useCallback(async (data: VerifyResponse) => {
+    let mergedWindows = data.windows || [];
+    try {
+      const w = await api.windows();
+      const chainById = new Map((w.windows || []).map((x) => [x.window_id, x.chain_hash]));
+      mergedWindows = mergedWindows.map((win) => {
+        const ch = chainById.get(win.window_id);
+        return ch ? { ...win, chain_hash: ch } : win;
+      });
+    } catch {
+      // GET /api/windows unavailable; leave windows as-is.
+    }
+    applyVerifyData({ ...data, windows: mergedWindows });
+  }, [applyVerifyData]);
+
   // Check health and run baseline verification
   const checkHealthAndLoad = useCallback(async () => {
     try {
@@ -58,12 +86,13 @@ export default function App() {
       setMode({ mock: health.data.mock, ledger_type: health.data.ledger_type });
 
       const verifyData = await api.verify();
-      applyVerifyData(verifyData);
+      await applyVerifyWithChain(verifyData);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
+      clearForensicState();
     }
-  }, [applyVerifyData]);
+  }, [applyVerifyWithChain, clearForensicState]);
 
   useEffect(() => {
     checkHealthAndLoad();
@@ -85,11 +114,12 @@ export default function App() {
       setMessage(`Successfully anchored ${res.newly_anchored} new time windows (total ${res.total_windows}) to ${mode.mock ? "Local SQLite (Triggers)" : "EVM Blockchain"}.`);
       playSuccess();
       const verifyData = await api.verify();
-      applyVerifyData(verifyData);
+      await applyVerifyWithChain(verifyData);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Anchor failed: ${msg}`);
       setMessage(null);
+      clearForensicState();
     } finally {
       setBusy(null);
     }
@@ -102,7 +132,7 @@ export default function App() {
     setMessage("Re-reading logs from disk and comparing SHA-256 chained hashes against ledger...");
     try {
       const verifyData = await api.verify();
-      applyVerifyData(verifyData);
+      await applyVerifyWithChain(verifyData);
       if (verifyData.overall_status === "INTACT") {
         setMessage("All 5-minute time windows verified intact against the anchored ledger.");
       } else if (verifyData.overall_status === "COMPROMISED") {
@@ -114,6 +144,7 @@ export default function App() {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Verification failed: ${msg}`);
       setMessage(null);
+      clearForensicState();
     } finally {
       setBusy(null);
     }
@@ -129,7 +160,7 @@ export default function App() {
       setLastTamperResult(tamperRes);
 
       const verifyData = await api.verify();
-      applyVerifyData(verifyData);
+      await applyVerifyWithChain(verifyData);
       setMessage(
         action === "delete_window"
           ? `Attacker removed all lines of Window ${windowIndex}. Re-verified (expect MISSING).`
@@ -139,6 +170,7 @@ export default function App() {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Tamper execution failed: ${msg}`);
       setMessage(null);
+      clearForensicState();
     } finally {
       setBusy(null);
     }
@@ -155,12 +187,13 @@ export default function App() {
       setAnchorChainTip(null);
       setMessage("Demo logs restored to original clean state. Re-verifying...");
       const verifyData = await api.verify();
-      applyVerifyData(verifyData);
-      setMessage("Demo reset complete. All windows returned to INTACT.");
+      await applyVerifyWithChain(verifyData);
+      setMessage("Demo reset complete. Ledger cleared. Click Anchor Logs to record fresh fingerprints.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Reset failed: ${msg}`);
       setMessage(null);
+      clearForensicState();
     } finally {
       setBusy(null);
     }
@@ -230,19 +263,6 @@ export default function App() {
         {/* Main SOC Container */}
         <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 pb-12 space-y-6 relative z-10">
 
-          {/* Global Error Alert if any */}
-          {error && (
-            <div className="p-4 rounded-xl liquid-glass-inner border border-[#BA4A38]/40 text-xs font-mono text-[#BA4A38] flex items-center justify-between shadow-sm">
-              <span>{error}</span>
-              <button
-                onClick={() => setError(null)}
-                className="liquid-glass-btn px-3 py-1 rounded-full text-[11px] text-[#BA4A38] ml-2 font-bold cursor-pointer"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
-
           {/* 1. IntegrityHero: High-impact forensic verdict */}
           <IntegrityHero
             verdict={overall}
@@ -269,6 +289,7 @@ export default function App() {
             onVerify={handleVerify}
             onReset={handleReset}
             message={message}
+            error={error}
           />
 
           {/* 4. TamperConsole: Attacker Simulation with Modify / Delete */}

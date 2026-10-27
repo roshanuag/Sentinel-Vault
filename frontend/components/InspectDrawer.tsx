@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { X, Copy, Check, ShieldAlert, ShieldCheck, Hash, FileCode, Clock, Link2, AlertCircle } from "lucide-react";
+import { X, Copy, Check, ShieldAlert, ShieldCheck, Hash, Clock, Link2, AlertCircle } from "lucide-react";
 import { WindowObject } from "../lib/api";
-import { getStatusTheme, formatTimeRange, formatLocalDateTime, copyToClipboard } from "../lib/ui";
+import { getStatusTheme, formatTimeRange, formatLocalDateTime, isRealHash, copyToClipboard } from "../lib/ui";
 import { playClick } from "../lib/sound";
 
 interface InspectDrawerProps {
@@ -172,7 +172,8 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
               </div>
             </div>
 
-            {/* Chained Hash */}
+            {/* Chained Hash — shown only when a real chain hash is available (no placeholders) */}
+            {isRealHash(w.chain_hash) && (
             <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[#A07855] text-[11px] flex items-center gap-1 font-sans">
@@ -192,9 +193,10 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
                 )}
               </div>
               <div className="text-[#A07855] font-semibold break-all select-all font-mono">
-                {w.chain_hash || "0000000000000000000000000000000000000000000000000000000000000000"}
+                {w.chain_hash}
               </div>
             </div>
+            )}
           </div>
 
           {/* Forensic Metrics Grid */}
@@ -247,45 +249,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
             </div>
           </div>
 
-          {/* Log Lines Preview */}
-          <div className="space-y-2">
-            <h4 className="text-[11px] uppercase tracking-wider text-[#7E756B] font-bold flex items-center gap-1.5 font-sans">
-              <FileCode className="w-3.5 h-3.5 text-[#A07855]" />
-              Window Log Slices on Disk
-            </h4>
-
-            <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] space-y-1.5 shadow-sm">
-              {w.raw_lines && w.raw_lines.length > 0 ? (
-                w.raw_lines.map((line, idx) => {
-                  const isModified = w.tampered_line && line === w.tampered_line;
-                  return (
-                    <div
-                      key={idx}
-                      className={`p-2 rounded-lg font-mono text-[11px] leading-relaxed transition-colors ${
-                        isModified
-                          ? "bg-[#BA4A38]/15 border border-[#BA4A38]/40 text-[#BA4A38] font-bold"
-                          : "text-[#2A2421] hover:bg-white/40"
-                      }`}
-                    >
-                      <span className="text-[#7E756B] select-none mr-2 font-mono">
-                        {String(idx + 1).padStart(2, "0")}:
-                      </span>
-                      {line}
-                      {isModified && (
-                        <span className="ml-2 text-[9px] uppercase px-1.5 py-0.5 rounded-full liquid-glass-destructive text-white font-bold">
-                          TAMPERED
-                        </span>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-[#7E756B] italic py-2 text-center">
-                  No log lines retrieved for this slice.
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Window log slices intentionally hidden: the backend does not provide raw log lines. */}
         </div>
 
         {/* Footer */}

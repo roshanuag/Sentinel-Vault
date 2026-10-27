@@ -80,6 +80,13 @@ export function getStatusTheme(status: string | null | undefined) {
 }
 
 /**
+ * True only for a usable hash: present, non-empty, and not all zeros (a placeholder).
+ */
+export function isRealHash(hash: string | null | undefined): boolean {
+  return !!hash && hash.length > 0 && !/^0+$/.test(hash);
+}
+
+/**
  * Truncate a 64-char SHA-256 hash for display: 80c687...3721
  */
 export function shortHash(hash: string | null | undefined, lead = 8, trail = 8): string {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Copy, Check, ChevronRight, ShieldAlert, ShieldCheck, Clock, FileText, Hash } from "lucide-react";
 import { WindowObject } from "../lib/api";
-import { getStatusTheme, shortHash, formatTimeRange, copyToClipboard } from "../lib/ui";
+import { getStatusTheme, shortHash, formatTimeRange, isRealHash, copyToClipboard } from "../lib/ui";
 import { playClick } from "../lib/sound";
 
 interface WindowCardProps {
@@ -101,7 +101,8 @@ export const WindowCard: React.FC<WindowCardProps> = ({
 
         {/* Forensic Hashes Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 my-3 text-xs font-mono">
-          {/* Chained Hash (mini blockchain) */}
+          {/* Chain Hash — shown only when a real chain hash is available (no placeholders) */}
+          {isRealHash(w.chain_hash) && (
           <div className="p-3 rounded-xl liquid-glass-inner flex items-center justify-between">
             <div className="overflow-hidden pr-2">
               <span className="text-[10px] text-[#7E756B] uppercase tracking-wider block flex items-center gap-1 font-sans">
@@ -128,6 +129,7 @@ export const WindowCard: React.FC<WindowCardProps> = ({
               </button>
             )}
           </div>
+          )}
 
           {/* Current vs Anchored Log Hash */}
           <div className="p-3 rounded-xl liquid-glass-inner flex items-center justify-between">

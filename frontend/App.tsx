@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import SculptureHero from "./components/ui/liquid-sculpture-hero";
 import { TopBar } from "./components/TopBar";
 import { IntegrityHero } from "./components/IntegrityHero";
@@ -10,6 +10,155 @@ import { InspectDrawer } from "./components/InspectDrawer";
 import { api, WindowObject, VerifyResponse, TamperResponse, MOCK_MODE } from "./lib/api";
 import { playSuccess, playAlarm } from "./lib/sound";
 import { Shield, Sparkles } from "lucide-react";
+
+// ────────────────────────────────────────────────────────────────────
+// Reusable pop-up (modal) shown OVER the page. The page does not scroll
+// underneath. Closes with the X button, the Esc key, or a click outside
+// the panel. Long content scrolls inside the panel.
+// ────────────────────────────────────────────────────────────────────
+function Modal({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    // Lock the page scroll while the pop-up is open.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      onClick={onClose} // click on the dimmed backdrop closes
+      className="fixed inset-0 z-[200] flex items-start sm:items-center justify-center p-4 bg-[#2A2421]/45 backdrop-blur-md"
+    >
+      {/* Liquid-glass panel: translucent frosted background (reuses the page's
+          liquid-glass-card: backdrop blur, soft light border, inset highlight,
+          soft shadow, rounded corners). overflow-hidden clips the rounded edge. */}
+      <div
+        onClick={(e) => e.stopPropagation()} // clicks inside the panel do NOT close
+        className="liquid-glass-card w-full max-w-4xl max-h-[88vh] my-4 flex flex-col"
+      >
+        {/* Scrolling body: content scrolls inside the panel if it is tall. A soft
+            warm tint keeps the text high-contrast over the frosted glass. */}
+        <div
+          className="flex-1 min-h-0 overflow-y-auto p-6 sm:p-10"
+          style={{ background: "rgba(247, 244, 238, 0.55)" }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// How it works — 3 plain steps (from PITCH_THEORY.md)
+function HowItWorksContent() {
+  const steps = [
+    {
+      n: "01",
+      title: "5-minute windows",
+      body:
+        "The log stream is sliced into fixed 5-minute windows. Each line is placed in a window by its timestamp, computed from the clock fields only — so the same logs produce the same windows on any machine.",
+    },
+    {
+      n: "02",
+      title: "SHA-256 fingerprint per window",
+      body:
+        "All of a window's log text is run through SHA-256, giving a 64-character fingerprint. Change a single character and the fingerprint changes completely — there is no fuzzy matching.",
+    },
+    {
+      n: "03",
+      title: "Chained hashes, anchored & verified",
+      body:
+        "Each window's hash includes the previous window's, forming a chain, then the fingerprints are anchored. Verify re-hashes the current logs and compares — flagging TAMPERED (edited), MISSING (deleted window) or LEDGER_TAMPERED (altered record).",
+    },
+  ];
+  return (
+    <>
+      <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#A07855] mb-2">How it works</p>
+      <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2A2421] mb-8 pr-10">
+        Three steps from logs to a verifiable record
+      </h2>
+      <div className="grid gap-5 sm:grid-cols-3">
+        {steps.map((step) => (
+          <div key={step.n} className="liquid-glass-card rounded-2xl p-6 flex flex-col gap-3">
+            <span className="font-mono text-sm text-[#A07855]">{step.n}</span>
+            <h3 className="font-serif text-xl font-bold text-[#2A2421]">{step.title}</h3>
+            <p className="text-sm leading-relaxed text-[#5C544B]">{step.body}</p>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// Threat model — what it detects + the honest limits (from THREAT_MODEL.md;
+// no "tamper-proof"/"immutable"/testnet claims)
+function ThreatModelContent() {
+  return (
+    <>
+      <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#A07855] mb-2">Threat model</p>
+      <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2A2421] mb-8 pr-10">
+        What it catches — and where it stops
+      </h2>
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* What it detects */}
+        <div className="liquid-glass-card rounded-2xl p-6">
+          <h3 className="font-serif text-xl font-bold text-[#2A2421] mb-4">What it detects</h3>
+          <ul className="space-y-3 text-sm leading-relaxed text-[#5C544B]">
+            <li><span className="font-mono text-[#A07855]">TAMPERED</span> — a log line was edited after anchoring, so the window's fingerprint no longer matches.</li>
+            <li><span className="font-mono text-[#A07855]">MISSING</span> — a whole time window was deleted but is still recorded in the anchor; the chain binds window order.</li>
+            <li><span className="font-mono text-[#A07855]">LEDGER_TAMPERED</span> — an anchored record itself was partially altered, breaking its link to the next row.</li>
+            <li>API abuse — writes need an API key and anchor/tamper endpoints are rate-limited.</li>
+          </ul>
+        </div>
+        {/* Honest limits */}
+        <div className="liquid-glass-card rounded-2xl p-6">
+          <h3 className="font-serif text-xl font-bold text-[#2A2421] mb-4">Honest limits</h3>
+          <ul className="space-y-3 text-sm leading-relaxed text-[#5C544B]">
+            <li><span className="font-semibold text-[#2A2421]">Local mode can't stop a root attacker</span> who rewrites the whole ledger: everything on the box is within root's reach, and a fully re-chained local ledger looks internally valid.</li>
+            <li>A <span className="font-semibold text-[#2A2421]">public blockchain anchor is the next step</span> — fingerprints would live on nodes the attacker doesn't control. So far this path is tested only on a local chain (same host), not a public testnet.</li>
+            <li>If the host is compromised <em>before</em> a window is collected, the corrupted log becomes the baseline — we detect tampering after anchoring, not fabrication before it.</li>
+            <li>Proof is per 5-minute window, not per individual line.</li>
+          </ul>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// Team — 4 roles, placeholder names (do not invent names)
+function TeamContent() {
+  return (
+    <>
+      <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#A07855] mb-2">Team</p>
+      <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2A2421] mb-8 pr-10">
+        Who built SentinelVault
+      </h2>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { name: "Roshan Adhikari", role: "Backend" },
+          { name: "Karan Samant", role: "Frontend" },
+          { name: "Harshit Singh", role: "Frontend" },
+          { name: "Yashaswini", role: "Research" },
+        ].map((member) => (
+          <div key={member.name} className="liquid-glass-card rounded-2xl p-6 text-center">
+            <div className="font-serif text-lg font-bold text-[#2A2421]">{member.name}</div>
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[#A07855] mt-1">{member.role}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
 
 export default function App() {
   // System & Connection State
@@ -33,6 +182,9 @@ export default function App() {
   const [selectedWindow, setSelectedWindow] = useState<WindowObject | null>(null);
   const [lastTamperResult, setLastTamperResult] = useState<TamperResponse | null>(null);
   const [anchorChainTip, setAnchorChainTip] = useState<string | null>(null);
+
+  // Which hero-nav pop-up is open (null = none). Opened from the hero nav links.
+  const [modal, setModal] = useState<"how" | "threat" | "team" | null>(null);
 
   // Apply verify payload to state
   const applyVerifyData = useCallback((data: VerifyResponse) => {
@@ -217,7 +369,14 @@ export default function App() {
          ──────────────────────────────────────────────────────────────── */}
       <section id="hero" className="relative w-full min-h-screen overflow-hidden">
         <SculptureHero
-          brand="Sentinel"
+          brand={
+            <span
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.35em", fontSize: "1.2em" }}
+            >
+              <Shield className="w-[1.05em] h-[1.05em]" strokeWidth={2.25} aria-hidden="true" />
+              SentinelVault
+            </span>
+          }
           backdropText="Sentinel"
           background="#F7F4EE"
           darkBackground="#F7F4EE"
@@ -232,13 +391,16 @@ export default function App() {
           hint=""
           hintTouch=""
           navLinks={[
-            { label: "Work", href: "#hero" },
-            { label: "Studio", href: "#hero" },
-            { label: "Approach", href: "#hero" },
-            { label: "Journal", href: "#hero" },
-            { label: "SentinelVault SOC", href: "#vault-soc" },
+            { label: "How it works", href: "#", onClick: (e) => { e.preventDefault(); setModal("how"); } },
+            { label: "Live demo", href: "#vault-soc" },
+            { label: "Threat model", href: "#", onClick: (e) => { e.preventDefault(); setModal("threat"); } },
+            { label: "Team", href: "#", onClick: (e) => { e.preventDefault(); setModal("team"); } },
           ]}
-          navCta={{ label: "Contact", href: "#hero" }}
+          navCta={{
+            label: "GitHub",
+            href: "https://github.com/roshanuag/Tamper-Proof-Security-Log-Vault",
+            external: true,
+          }}
         />
       </section>
 
@@ -359,6 +521,24 @@ export default function App() {
           <span className="font-serif font-medium whitespace-nowrap">Forensics SOC</span>
         </a>
       </div>
+
+      {/* Hero-nav pop-ups (modals). Rendered over the page; the page does not
+          scroll underneath. Opened from the hero nav links. */}
+      {modal === "how" && (
+        <Modal label="How it works" onClose={() => setModal(null)}>
+          <HowItWorksContent />
+        </Modal>
+      )}
+      {modal === "threat" && (
+        <Modal label="Threat model" onClose={() => setModal(null)}>
+          <ThreatModelContent />
+        </Modal>
+      )}
+      {modal === "team" && (
+        <Modal label="Team" onClose={() => setModal(null)}>
+          <TeamContent />
+        </Modal>
+      )}
     </div>
   );
 }

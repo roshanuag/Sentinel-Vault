@@ -1021,6 +1021,10 @@ class LiquidEngine {
 export interface SculptureHeroLink {
   label: string
   href: string
+  /** Opens the link in a new tab (adds rel="noopener noreferrer"). For external links. */
+  external?: boolean
+  /** Click handler — e.g. to open a pop-up instead of navigating. Call preventDefault() to stop the href. */
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>
 }
 
 export interface SculptureHeroProps {
@@ -1035,7 +1039,7 @@ export interface SculptureHeroProps {
   /** Only for images without transparency: the flat background colour inside the image. */
   imageBackground?: string
 
-  brand?: string
+  brand?: React.ReactNode
   navLinks?: SculptureHeroLink[]
   navCta?: SculptureHeroLink
   showNav?: boolean
@@ -1126,8 +1130,8 @@ const DEFAULTS = {
     { label: "Studio", href: "#" },
     { label: "Approach", href: "#" },
     { label: "Journal", href: "#" },
-  ],
-  navCta: { label: "Contact", href: "#" },
+  ] as SculptureHeroLink[],
+  navCta: { label: "Contact", href: "#" } as SculptureHeroLink,
   eyebrow: "Independent studio — Est. 2019",
   headline: "Form that\nanswers back.",
   headlineAccent: "answers back.",
@@ -1662,7 +1666,13 @@ export default function SculptureHero(props: SculptureHeroProps) {
           <ul className="sh-links">
             {navLinks.map((l, i) => (
               <li key={i}>
-                <a className="sh-link" href={l.href}>
+                <a
+                  className="sh-link"
+                  href={l.href}
+                  onClick={l.onClick}
+                  target={l.external ? "_blank" : undefined}
+                  rel={l.external ? "noopener noreferrer" : undefined}
+                >
                   {l.label}
                 </a>
               </li>
@@ -1681,7 +1691,12 @@ export default function SculptureHero(props: SculptureHeroProps) {
             )}
             {navCta && navCta.label && (
               <li className="sh-keep">
-                <a className="sh-navcta" href={navCta.href}>
+                <a
+                  className="sh-navcta"
+                  href={navCta.href}
+                  target={navCta.external ? "_blank" : undefined}
+                  rel={navCta.external ? "noopener noreferrer" : undefined}
+                >
                   {navCta.label}
                 </a>
               </li>

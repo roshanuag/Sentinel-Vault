@@ -22,3 +22,9 @@ desktop.ini
 *.sqlite
 *.db
 /data/server.log
+
+# Python test/cache
+.pytest_cache/
+
+# Dropped frontend design iteration (kept on disk, not tracked)
+/frontend2/

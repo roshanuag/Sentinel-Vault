@@ -73,6 +73,29 @@ def test_anchor_verify_tamper_flow(client):
     assert w0["status"] == "TAMPERED"
 
 
+def test_delete_window_shows_missing(client):
+    assert client.post("/api/anchor", headers=KEY).json()["total_windows"] == 3
+    assert client.post("/api/verify", headers=KEY).json()["overall_status"] == "INTACT"
+
+    t = client.post(
+        "/api/tamper-demo", headers=KEY,
+        json={"window_index": 1, "action": "delete_window"},
+    )
+    assert t.status_code == 200
+    body = t.json()
+    assert body["action"] == "delete_window"
+    assert body["target_window_index"] == 1
+    assert body["lines_removed"] >= 1
+    assert body["line_changed"] is None
+
+    v = client.post("/api/verify", headers=KEY).json()
+    assert v["overall_status"] == "COMPROMISED"
+    w1 = next(w for w in v["windows"] if w["index"] == 1)
+    assert w1["status"] == "MISSING"
+    assert w1["current_log_hash"] is None
+    assert v["summary"]["missing"] == 1
+
+
 def test_rate_limit_returns_429(client):
     limit = server.RATE_LIMIT_MAX
     codes = [client.post("/api/anchor", headers=KEY).status_code for _ in range(limit + 1)]

@@ -141,10 +141,13 @@ Simulate an attacker editing or deleting a line inside a target window, so judge
 { "window_index": 0, "action": "modify" }
 ```
 - `window_index` (required): `0` = first window.
-- `action` (required): `"modify"` (change a line) or `"delete"` (remove a line).
+- `action` (required): one of
+  - `"modify"` — change one line in the window (verify → that window `TAMPERED`).
+  - `"delete"` — remove one line from the window (verify → that window `TAMPERED`).
+  - `"delete_window"` — remove **every** line of the window, so the whole time slice disappears (verify → that window `MISSING`).
 - For safety this endpoint **only ever modifies the server's configured log** (`LOG_PATH`). It takes **no** `log_path`; any `log_path` sent in the body is ignored.
 
-**Response 200:**
+**Response 200 (`modify` / `delete`):**
 ```json
 {
   "mock": true,
@@ -160,6 +163,27 @@ Simulate an attacker editing or deleting a line inside a target window, so judge
 }
 ```
 - For `action: "delete"`, `line_changed.after` is `null`.
+
+**Response 200 (`delete_window`):**
+```json
+{
+  "mock": true,
+  "action": "delete_window",
+  "target_window_index": 1,
+  "target_window_id": "2026-10-27T10:05:00",
+  "lines_removed": 3,
+  "line_changed": null,
+  "removed_lines": [
+    "2026-10-27 10:05:10 server sshd[1210]: Failed password for carol ...",
+    "2026-10-27 10:06:02 server sshd[1211]: Accepted password for carol ...",
+    "2026-10-27 10:07:44 server sudo: carol : COMMAND=/bin/cat /etc/shadow"
+  ],
+  "note": "The entire window was removed from the log. Run POST /api/verify; this window will show MISSING."
+}
+```
+- `lines_removed`: how many lines were deleted (the whole window).
+- `removed_lines`: the exact lines that were removed (newlines stripped), top to bottom.
+- `line_changed` is `null` for `delete_window` (no single line is singled out).
 
 **Errors:**
 - `400` — bad `window_index` (out of range) or bad `action`:

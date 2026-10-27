@@ -45,13 +45,21 @@ def _map_lines_to_windows(lines, window_seconds):
 
 
 def tamper_line(log_path, window_index, action, window_seconds=DEFAULT_WINDOW_SECONDS):
-    """Modify or delete one line inside window `window_index` of `log_path`.
+    """Modify or delete content inside window `window_index` of `log_path`.
+
+    Actions:
+      - "modify"        : change the first line of the window (content edit)
+      - "delete"        : remove the last line of the window (one line gone)
+      - "delete_window" : remove EVERY line of the window, so the whole time
+                          slice disappears and the next verify reports MISSING
 
     Returns a dict matching the POST /api/tamper-demo response in API_CONTRACT.md.
     Raises ValueError / IndexError on bad input.
     """
-    if action not in ("modify", "delete"):
-        raise ValueError(f"action must be 'modify' or 'delete', got {action!r}")
+    if action not in ("modify", "delete", "delete_window"):
+        raise ValueError(
+            f"action must be 'modify', 'delete' or 'delete_window', got {action!r}"
+        )
 
     with open(log_path, "r", encoding="utf-8") as handle:
         lines = handle.readlines()  # keeps newline characters
@@ -66,8 +74,21 @@ def tamper_line(log_path, window_index, action, window_seconds=DEFAULT_WINDOW_SE
         )
 
     window_id, line_indexes = mapped[window_index]
+    lines_removed = None
 
-    if action == "delete":
+    if action == "delete_window":
+        # Remove EVERY line of this window so the whole time slice is gone.
+        # Delete from the highest index down so earlier indexes don't shift.
+        removed = []
+        for idx in sorted(line_indexes, reverse=True):
+            removed.append(lines[idx].rstrip("\n"))
+            del lines[idx]
+        removed.reverse()  # back to top-to-bottom order for the response
+        lines_removed = len(line_indexes)
+        before = removed  # list of the removed lines
+        after = None
+        line_number = None
+    elif action == "delete":
         target = line_indexes[-1]  # delete the last line of the window
         before = lines[target].rstrip("\n")
         del lines[target]
@@ -94,6 +115,21 @@ def tamper_line(log_path, window_index, action, window_seconds=DEFAULT_WINDOW_SE
 
     with open(log_path, "w", encoding="utf-8") as handle:
         handle.writelines(lines)
+
+    if action == "delete_window":
+        return {
+            "mock": True,
+            "action": action,
+            "target_window_index": window_index,
+            "target_window_id": window_id,
+            "lines_removed": lines_removed,
+            "line_changed": None,
+            "removed_lines": before,  # the full lines that were deleted
+            "note": (
+                "The entire window was removed from the log. "
+                "Run a verify pass; this window will show MISSING."
+            ),
+        }
 
     return {
         "mock": True,

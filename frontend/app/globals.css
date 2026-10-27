@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  
+  /* Vintage Paper Remix Palette (from screenshot) */
+  --bg: #F7F4EE;                    /* Vintage Paper background */
+  --bg-secondary: #EDE6DA;          /* Muted antique cream */
+  --card: #FFFFFF;                  /* Card crisp white */
+  --card-warm: #FCFAF7;             /* Warm card tone */
+  --border: #D5CDBD;                /* Soft parchment border */
+  --border-strong: #B8ADA0;         /* Emphasized border */
+  
+  --text: #2A2421;                  /* Deep espresso charcoal */
+  --muted: #7E756B;                 /* Muted subtitle & caption text */
+  --faint: #9F9588;                 /* Faint reference text */
+
+  /* Components & Accents */
+  --primary: #A07855;               /* Vintage leather / caramel brown */
+  --primary-hover: #8D6544;
+  --secondary: #E4DFD7;             /* Warm stone greige */
+  --secondary-hover: #D9D3CA;
+  --accent: #DDD5C7;                /* Light wheat */
+  --muted-bg: #EDE6DA;              /* Muted component tone */
+  --destructive: #BA4A38;           /* Vintage rust red / terracotta */
+  --destructive-hover: #A53E2D;
+
+  /* Forensic Status Colors tuned to Vintage Paper */
+  --emerald: #2E7D5B;               /* Antique sage green (INTACT) */
+  --crimson: #BA4A38;               /* Vintage rust red (TAMPERED) */
+  --amber: #B87720;                 /* Antique ochre (UNANCHORED) */
+  --slate: #857E76;                 /* Warm stone gray (MISSING) */
+  --violet: #7D6B9C;                /* Dusty antique purple (BLOCKCHAIN) */
+
+  --radius: 6px;                    /* 6px softened radius */
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: var(--font-serif);
+}
+
+/* Subtle vintage paper grid */
+.vintage-paper-bg {
+  background-color: #F7F4EE;
+  background-image: 
+    radial-gradient(rgba(160, 120, 85, 0.05) 1px, transparent 1px),
+    linear-gradient(to right, rgba(213, 205, 189, 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(213, 205, 189, 0.3) 1px, transparent 1px);
+  background-size: 24px 24px, 32px 32px, 32px 32px;
+}
+
+/* Ambient warm illumination */
+.ambient-glow {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1000px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(160, 120, 85, 0.08) 0%, rgba(221, 213, 199, 0.04) 50%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-glow-compromised {
+  background: radial-gradient(circle, rgba(186, 74, 56, 0.12) 0%, rgba(184, 119, 32, 0.04) 50%, transparent 75%) !important;
+}
+
+/* Vintage Paper Card Panels */
+.vintage-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(42, 36, 33, 0.05), 0 4px 16px rgba(42, 36, 33, 0.03);
+}
+
+.vintage-card-warm {
+  background: #FCFAF7;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(42, 36, 33, 0.05), 0 6px 20px rgba(42, 36, 33, 0.04);
+}
+
+.vintage-card-elevated {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(42, 36, 33, 0.08);
+}
+
+/* Vintage Buttons matching Screenshot */
+.btn-vintage-primary {
+  background-color: var(--primary);
+  color: #FFFFFF;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-vintage-primary:hover {
+  background-color: var(--primary-hover);
+  box-shadow: 0 2px 8px rgba(160, 120, 85, 0.35);
+}
+
+.btn-vintage-secondary {
+  background-color: var(--secondary);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.btn-vintage-secondary:hover {
+  background-color: var(--secondary-hover);
+}
+
+.btn-vintage-outline {
+  background-color: #FFFFFF;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.btn-vintage-outline:hover {
+  background-color: var(--muted-bg);
+}
+
+.btn-vintage-destructive {
+  background-color: var(--destructive);
+  color: #FFFFFF;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-vintage-destructive:hover {
+  background-color: var(--destructive-hover);
+  box-shadow: 0 2px 8px rgba(186, 74, 56, 0.35);
+}
+
+/* Custom Scrollbar for Vintage Paper */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #EDE6DA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C4BAAB;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A07855;
+}
+
+/* Scanline beam tuned for warm paper */
+.scanline-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(160, 120, 85, 0.7) 50%, transparent 100%);
+  box-shadow: 0 0 10px rgba(160, 120, 85, 0.6);
+  animation: scanbeam 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes scanbeam {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}

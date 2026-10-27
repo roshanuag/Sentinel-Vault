@@ -1,86 +1,174 @@
 # SentinelVault — 3-Minute Judge Demo Script
 
-**Goal:** show that we can detect tampering in logs *even when the attacker has full root access* — and point at the exact time window that was changed.
+**Goal:** show that SentinelVault detects log tampering and points at the exact five-minute window that was changed or deleted, and be honest about what protects against a root attacker.
 
-**Before you start (off-camera):**
-- One terminal open at the repo root, dependencies installed (`pip install -r requirements.txt`).
-- Run `python src/vault.py init-demo` once so the demo log + empty ledger exist.
-- Primary demo is **local mode** (offline, no Wi-Fi needed). Keep the EVM mode as an optional "and it also works on a real blockchain" beat.
+**Rule for every claim:** say only what we have actually run. Local mode is tamper-*evidence*. Protection against a root attacker needs a public blockchain, which we have **not** run yet.
+
+---
+
+## Who does what
+
+- **Problem (0:00–0:30):** PPT teammate, with the problem slide.
+- **How it works (0:30–1:10):** backend owner.
+- **Live demo (1:10–2:30):** frontend teammate clicks; backend owner narrates.
+- **Close + questions (2:30–3:00):** backend owner; research teammate helps with limitation questions.
+
+Change this to fit your team, but decide it before judging starts.
+
+---
+
+## Before judges arrive (off-camera checklist)
+
+1. Laptop plugged in. Close the Claude app, extra Chrome tabs and anything not needed (this laptop has frozen twice).
+2. **Terminal 1 (backend):**
+   `cd C:\hackathon\log-vault`
+   `python -m uvicorn src.server:app --reload`
+3. **Terminal 2 (frontend):**
+   `cd C:\hackathon\log-vault\frontend`
+   `npm run dev`
+   Never set `VITE_MOCK_MODE=true` for the demo.
+4. Open `http://localhost:5173` in Chrome. Refresh with **Ctrl + Shift + R**.
+5. Check the top bar: **"API: :8000 LIVE"** and **"Ledger: Local (set by server)"**. There must be **no** red "MOCK DATA" banner.
+6. Click **Reset Demo**. The message should say *"Demo reset complete. Ledger cleared. Click Anchor Logs to record fresh fingerprints."* and the timeline shows 0 windows. **Do not anchor yet**; we anchor live.
+7. Open `http://localhost:8000/docs` in a second tab (Plan B).
+8. Backup video ready to play (Plan C).
+
+If the sample log was changed since the last rehearsal: Reset Demo → Anchor Logs → Verify Integrity must show all INTACT. Then Reset Demo again.
 
 ---
 
 ## 0:00 – 0:30 · The problem
 
-> "When a system gets breached, the first thing a competent attacker does is **edit or delete the logs** to erase the evidence. And ordinary log servers can't stop them — anyone with root, including a malicious insider, can rewrite the files and nobody can prove it later. Compliance rules say keep trustworthy logs for months, but most teams have **no way to prove** their stored logs are the originals. That's the gap we close."
+> "When attackers break into a server, one of the first things they do is **edit or delete the logs** to hide what they did. Anyone with admin access, including a malicious insider, can quietly change log files, and later nobody can prove what the original logs said. Investigators lose the evidence, and compliance rules that require trustworthy logs can't be met. That's the gap we close."
 
-## 0:30 – 1:15 · The architecture (how the chain catches tampering)
+## 0:30 – 1:10 · How it works
 
-> "SentinelVault chops the logs into fixed **5-minute windows** and takes a **SHA-256 fingerprint** of each window. Each fingerprint also includes the **previous** window's fingerprint — so the windows form a chain, like a mini blockchain."
+> "SentinelVault cuts the logs into **five-minute windows** and takes a **SHA-256 fingerprint** of each one. Change even one character and the fingerprint changes completely."
 >
-> "Those fingerprints get **anchored** somewhere the admin can't rewrite: by default an **append-only database** — the database itself refuses any edit or delete — and optionally a **real smart contract on an EVM chain**. To verify, we re-read the current logs, re-fingerprint them, and compare. If a window's fingerprint doesn't match, we flag that **exact window**; if a whole window is gone, we flag it as **missing**. The attacker can change the logs, but they can't change the anchored record to match."
-
-*(If you have a slide, show the diagram from the README here.)*
-
-## 1:15 – 2:30 · Live tamper-detection demo
-
-Run these in the terminal and narrate each step.
-
-**1. Anchor the logs (record the fingerprints):**
-```
-python src/vault.py anchor
-```
-> "We've fingerprinted three 5-minute windows and anchored them. Notice `mock: true` — this is the local append-only ledger."
-
-**2. Verify — everything is clean:**
-```
-python src/vault.py verify
-```
-> "All three windows come back **INTACT**. The logs match what we anchored."
-
-**3. Play the attacker — edit a log line inside window 0:**
-```
-python src/vault.py tamper-demo --window-index 0 --action modify
-```
-> "Now I'm the attacker with root. I just altered a line in the first time window — exactly what someone would do to hide a break-in."
-
-**4. Verify again — caught:**
-```
-python src/vault.py verify
-```
-> "**Window 0 is now flagged TAMPERED**, and it tells us a line was modified — while windows 1 and 2 stay green. It pinpoints the exact five-minute window an investigator needs to look at. Let me try deleting a line instead:"
-```
-python src/vault.py tamper-demo --window-index 1 --action delete
-python src/vault.py verify
-```
-> "Window 1 flips to TAMPERED too, and it reports the **line count dropped** — a deletion."
-
-**5. Prove the record itself can't be rewritten:**
-> "And the anchor is genuinely append-only — if the attacker tries to update or delete the fingerprint in the ledger to cover their tracks, the database **refuses**. That's what makes it tamper-proof, not just tamper-evident."
-
-*(Optional, if you have the API/frontend up: open `http://localhost:8000/docs`, run `POST /api/verify`, and show the same JSON — or show the dashboard timeline turning one window red.)*
-
-## 2:30 – 3:00 · Close
-
-> "Everything you saw is real — real hashing, real chaining, a real append-only store. We're honest about what's simulated: the local ledger labels itself `mock: true`. Flip one environment variable and we anchor the same fingerprints to a **real EVM smart contract** — `mock: false` — which we've tested end-to-end on a local chain, and the same code works against a public testnet like Polygon Amoy or Sepolia."
+> "Each window's fingerprint is also chained to the previous one, like a mini blockchain, so you can't quietly remove or reorder a window."
 >
-> "So: logs you can **prove** are the originals, the exact tampered window identified in seconds, and an anchor even a root administrator can't quietly rewrite. That's SentinelVault."
+> "We save these fingerprints in a ledger. Later, we re-read the logs, fingerprint them again, and compare. A changed window shows **TAMPERED**, a deleted window shows **MISSING**, and we record **when each fingerprint was saved** and **when the tampering was first noticed**, which is exactly what the problem asks for."
+
+*(Show the architecture slide here if you have one.)*
+
+## 1:10 – 2:30 · Live demo: the attack story
+
+Our synthetic log tells a story: a **brute-force attack on root**, then a **successful login as `analyst`** at 10:09, then that user **reads the system password file** (`sudo cat /etc/shadow`) at 10:11. We play the attacker who hides it.
+
+The three windows:
+- **Window 0 (10:00–10:05):** normal admin activity.
+- **Window 1 (10:05–10:10):** brute force + the suspicious login.
+- **Window 2 (10:10–10:15):** the password-file read.
+
+**Step 1: click Anchor Logs.**
+*You see:* the message "anchored 3 new time windows (total 3)", three windows in the timeline, and a code in the **Chain Tip Hash** card.
+> "We've fingerprinted all three windows and chained them together. This is our record of what the logs originally said."
+
+**Step 2: click Verify Integrity.**
+*You see:* three green **INTACT** windows and a green **VERIFIED** pill.
+> "Verify re-reads the logs, fingerprints them again and compares. Everything matches."
+
+**Step 3: attack #1 — Attacker Tamper Console: Target Time Window = Window 1, Attack Vector = Delete Log Line, click Execute Attack.**
+*You see:* the Attack Execution Log shows the deleted line (the 10:09 `analyst` login). The console re-verifies automatically: window 1 turns **red, TAMPERED**, and "Cryptographic chain broken" appears between windows 0 and 1.
+> "I'm the attacker. I delete my login line from window 1. The vault re-checks immediately, and window 1 is flagged."
+
+**Step 4: attack #2 — Target Time Window = Window 2, Attack Vector = Delete Whole Window, click Execute Attack.**
+*You see:* the log lists the 4 removed lines, including `sudo ... cat /etc/shadow`. Window 2 shows **MISSING**.
+> "Now I delete the entire five minutes where I read the password file. The whole window is gone, and it's flagged MISSING."
+
+**Step 5: point at the dashboard.**
+*You see:* a red **COMPROMISED** pill, and the timeline filters show **Intact 1 · Tampered 1 · Missing 1**.
+> "Window 0 is still green. Only the windows the attacker touched are flagged."
+
+**Step 6: click window 1 (or "Inspect Cryptographic Diff" on it).**
+*You see:* the saved fingerprint (green) vs. the current one (red), **4 lines → 3 lines**, **Originally recorded** and **First noticed** times.
+> "Here's the proof: the fingerprint we saved, the fingerprint now, the line count dropped from 4 to 3, when the original was recorded, and when we first caught the change."
+
+*(Optional, 10 seconds: close the inspector, click Verify Integrity again, reopen window 1 — "First noticed" hasn't moved.)*
+
+## 2:30 – 3:00 · Honest close
+
+> "Everything you just saw is real: real hashing, real chaining, real detection against our live backend, not a mock. We also check the ledger itself: if someone edits a saved fingerprint, even recalculating it, the broken link to the next window is flagged as **LEDGER_TAMPERED**. That's covered by our automated tests: 24 of them."
+>
+> "We're honest about the limit: on a single machine, an attacker with full root control could rewrite the whole ledger. The real fix is an **independent witness**: anchoring the fingerprints on a public blockchain, where there's no admin to compromise. We've built that as a smart contract and tested it on a local chain; running it on a public testnet is our next step."
+>
+> "So: tampering caught, pinpointed to the exact window in seconds, with a clear path to protection even against root. That's SentinelVault."
 
 ---
 
-## Optional EVM beat (only if Wi-Fi/time allows)
+## Plan B: dashboard fails → use the /docs page
 
-```
-# Terminal A:
-npx ganache -p 8545 --deterministic
-# Terminal B (PowerShell):
-$env:LEDGER_BACKEND="testnet"; $env:RPC_URL="http://127.0.0.1:8545"
-python src/vault.py init-demo
-python -m uvicorn src.server:app --reload
-```
-Then hit `http://localhost:8000/api/health` → `"mock": false, "ledger_type": "testnet"`, and run the same anchor/verify/tamper flow through `/docs`.
+Open `http://localhost:8000/docs`. For each POST, click **Try it out**, enter `demo-key-123` in **x-api-key**, then **Execute**.
 
-## If anything breaks on stage
+1. **POST /api/anchor**
+2. **POST /api/verify** → `"overall_status": "INTACT"`
+3. **POST /api/tamper-demo** with body:
+   `{ "window_index": 1, "action": "delete" }`
+4. **POST /api/tamper-demo** with body:
+   `{ "window_index": 2, "action": "delete_window" }`
+5. **POST /api/verify** → window 0 `INTACT`, window 1 `TAMPERED`, window 2 `MISSING`, `"overall_status": "COMPROMISED"`.
 
-- Fall back to **local mode** (no network). It's the primary demo for a reason.
-- Reset between run-throughs: `python src/vault.py init-demo`.
-- Keep a **screen recording** of a successful run as backup.
+Say the same lines as above; point at `status`, the two hashes, `anchored_at` and `first_noticed_at` in the JSON.
+
+**If the dashboard shows a red error box at the buttons ("Cannot reach backend"):** the backend stopped. Restart it in Terminal 1, click Reset Demo, and continue. If it doesn't come back, switch to Plan C.
+
+## Plan C: laptop freezes → play the backup video
+
+Say: "Our laptop froze; here's a recording of the same run from earlier." Narrate it with the same script.
+
+## Between rehearsals / judge groups
+
+Click **Reset Demo**, then stop. Anchor live at the start of the next run.
+Never reset in the middle of a demo.
+
+---
+
+## Things NOT to say or show
+
+- ❌ "Even root can't tamper with it." (Only true with a public blockchain, which we haven't run.)
+- ❌ "The database refuses all edits, so it's tamper-proof." (Root can bypass the database triggers.)
+- ❌ "It works on a public testnet." (Never run. Say "next step.")
+- ❌ "These are real attack logs." (All data is synthetic, using reserved example IP addresses.)
+- ❌ Don't run the frontend in mock mode, and don't open the hidden Admin Panel (its login is a browser-only demo, not connected to the backend).
+
+---
+
+## Likely judge questions (honest answers)
+
+**"Can't root just rewrite your ledger too?"**
+Yes, on a single machine. Our self-check catches partial edits, including a recalculated fingerprint, but a full rewrite of every row is only stopped by an independent witness: a public blockchain. That's built and tested on a local chain; public testnet is next.
+
+**"Why blockchain at all?"**
+The fingerprints must live somewhere the attacker doesn't control. A public blockchain has no single admin to hack or bribe. A separate server or write-once cloud storage are alternatives.
+
+**"Can I see LEDGER_TAMPERED?"**
+It's triggered by editing the ledger database directly, which has no button in the demo. It's proven by our automated tests (show `python -m pytest -q` → 24 passed if asked), and the dashboard has a purple status ready for it.
+
+**"What if the attacker was already in before you collected the logs?"**
+Then the bad log becomes our baseline. We detect changes after fingerprinting, not lies written before it. It's in our threat model.
+
+**"Can you tell which exact line changed?"**
+We pinpoint the window and infer edit vs. deletion from the line count. Per-line proof with Merkle trees is a planned enhancement.
+
+**"Why five-minute windows?"**
+A trade-off: smaller windows catch changes sooner but mean more fingerprints to store. It's configurable.
+
+**"Why do the times look different (10:05 vs. 01:30)?"**
+The 10:00–10:15 times are from our synthetic sample log. "Originally recorded" and "First noticed" are the real moments we anchored and detected, shown in local time.
+
+**"Is this real or a mock?"**
+Real. The top bar shows "API: :8000 LIVE" and "Ledger: Local (set by server)". If the backend were down, the dashboard shows "Backend offline" and an error instead of fake data.
+
+**"Did you use AI?"**
+Yes: Claude Code for the backend and Codex for the frontend, disclosed in our README. We tested every feature ourselves.
+
+---
+
+## Before the real demo, confirm in rehearsal
+
+- [ ] Delete Log Line on window 1 removes the 10:09 `analyst` login line.
+- [ ] Delete Whole Window on window 2 lists 4 removed lines including `/etc/shadow`.
+- [ ] Timeline ends at Intact 1 · Tampered 1 · Missing 1, with a red COMPROMISED pill.
+- [ ] Window 1's inspector shows both hashes, 4 → 3 lines, Originally recorded and First noticed.
+- [ ] Full run fits in 3 minutes. Rehearse 3 times, with Reset Demo between runs.
+- [ ] Backup video recorded from a clean run.

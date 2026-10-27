@@ -185,8 +185,10 @@ Resets the working log to the pristine sample and clears the ledger, so a demo c
 | Variable | Meaning | Default |
 |---|---|---|
 | `LOG_PATH` | working log file the API reads | `data/server.log` |
-| `DB_PATH` | ledger SQLite file | `data/ledger.sqlite` |
-| `LEDGER_TYPE` | `local` or `testnet` | `local` |
+| `DB_PATH` | local ledger SQLite file | `data/ledger.sqlite` |
+| `LEDGER_BACKEND` | `local` or `testnet` (picks the anchor backend; `mock` derives from this) | `local` |
+| `RPC_URL` | EVM node URL (testnet backend) | `http://127.0.0.1:8545` |
+| `PRIVATE_KEY` | funded key to sign txs (public testnet; omit for ganache) | _(unset)_ |
+| `CONTRACT_ADDRESS` | reuse an already-deployed `LogVault` (else one is deployed) | _(unset)_ |
 | `WINDOW_SECONDS` | window size in seconds | `300` |
 | `FRONTEND_ORIGIN` | allowed CORS origin | `http://localhost:5173` |
-| `MOCK_MODE` | force-label responses as mock | derived from `LEDGER_TYPE` |

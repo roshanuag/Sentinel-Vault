@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-Tamper-Proof Security Log Vault - Milestone 3
-FastAPI server exposing the 4 endpoints from API_CONTRACT.md.
+Tamper-Proof Security Log Vault - FastAPI server (Milestones 3 + 4).
 
 Run it (from the project root):
     python -m uvicorn src.server:app --reload
+
+The active anchor backend is chosen at startup by the LEDGER_BACKEND env var
+(local | testnet); see src/anchors.py. If testnet can't be built it falls back
+to local. The request/response shapes stay identical to API_CONTRACT.md and do
+not depend on which backend is active.
 
 Endpoints:
     GET  /api/health       - quick "is the server up?" check (not in the contract)
     GET  /api/windows      - list anchored windows
     POST /api/anchor       - anchor new windows
-    POST /api/verify       - verify current log vs ledger
+    POST /api/verify       - verify current log vs the anchor
     POST /api/tamper-demo  - demo-only: edit/delete a line in a window
-    POST /api/reset-demo   - demo-only: reset working log + clear ledger
-
-The request/response shapes here must stay identical to API_CONTRACT.md.
+    POST /api/reset-demo   - demo-only: reset working log + clear local ledger/cache
 """
 
 import os
@@ -34,6 +36,7 @@ from pydantic import BaseModel
 
 from collector import collect_windows, build_chain, DEFAULT_WINDOW_SECONDS
 import ledger
+import anchors
 import verifier
 import tamper
 
@@ -41,22 +44,25 @@ import tamper
 LOG_PATH = os.environ.get("LOG_PATH", "data/server.log")
 DB_PATH = os.environ.get("DB_PATH", ledger.DEFAULT_DB_PATH)
 SAMPLE_PATH = os.environ.get("SAMPLE_PATH", "data/sample_auth.log")
-LEDGER_TYPE = os.environ.get("LEDGER_TYPE", "local")
 WINDOW_SECONDS = int(os.environ.get("WINDOW_SECONDS", DEFAULT_WINDOW_SECONDS))
 FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
-IS_MOCK = LEDGER_TYPE != "testnet"
+
+# The active anchor backend, built once at startup.
+_anchor = None
 
 
 @asynccontextmanager
 async def lifespan(app):
+    global _anchor
+    _anchor = anchors.get_anchor(db_path=DB_PATH)
     # Startup banner / mock-mode warning (CLAUDE.md: warn at startup when mock).
-    if IS_MOCK:
+    if _anchor.is_mock:
         print("[INFO] Ledger running in LOCAL APPEND-ONLY mode (mock: true).")
     else:
-        print("[INFO] Ledger running in TESTNET mode (mock: false).")
+        print(f"[INFO] Ledger running in TESTNET / EVM mode (mock: false) "
+              f"at {getattr(_anchor, 'address', 'unknown')}.")
     print(f"[INFO] log_path={LOG_PATH}  db_path={DB_PATH}  window_seconds={WINDOW_SECONDS}")
     print(f"[INFO] CORS allowed origin: {FRONTEND_ORIGIN}")
-    ledger.init_db(DB_PATH)
     yield
 
 
@@ -93,16 +99,15 @@ def _error(status_code, message):
 # ---- Endpoints --------------------------------------------------------------
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "mock": IS_MOCK, "ledger_type": LEDGER_TYPE}
+    return {"status": "ok", "mock": _anchor.is_mock, "ledger_type": _anchor.ledger_type}
 
 
 @app.get("/api/windows")
 def get_windows():
-    rows = ledger.get_all_windows(DB_PATH)
-    ledger_type = rows[0]["ledger_type"] if rows else LEDGER_TYPE
+    rows = _anchor.get_windows()
     return {
-        "mock": ledger_type != "testnet",
-        "ledger_type": ledger_type,
+        "mock": _anchor.is_mock,
+        "ledger_type": _anchor.ledger_type,
         "count": len(rows),
         "windows": rows,
     }
@@ -119,12 +124,10 @@ def post_anchor(req: AnchorRequest = AnchorRequest()):
         return _error(400, str(exc))
 
     records = build_chain(windows, WINDOW_SECONDS)
-    newly, already = ledger.anchor_windows(
-        records, db_path=DB_PATH, ledger_type=LEDGER_TYPE
-    )
+    newly, already = _anchor.anchor(records)
     return {
-        "mock": IS_MOCK,
-        "ledger_type": LEDGER_TYPE,
+        "mock": _anchor.is_mock,
+        "ledger_type": _anchor.ledger_type,
         "newly_anchored": newly,
         "already_anchored": already,
         "total_windows": len(records),
@@ -136,7 +139,7 @@ def post_anchor(req: AnchorRequest = AnchorRequest()):
 def post_verify(req: VerifyRequest = VerifyRequest()):
     log_path = req.log_path or LOG_PATH
     try:
-        return verifier.verify(log_path, db_path=DB_PATH, window_seconds=WINDOW_SECONDS)
+        return verifier.verify(log_path, _anchor, window_seconds=WINDOW_SECONDS)
     except FileNotFoundError:
         return _error(400, f"log file not found: {log_path!r}")
     except ValueError as exc:
@@ -165,4 +168,6 @@ def post_reset():
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
     ledger.init_db(DB_PATH)
-    return {"mock": IS_MOCK, "status": "reset", "log_path": LOG_PATH}
+    if os.path.exists(anchors.DEFAULT_CACHE_DB):
+        os.remove(anchors.DEFAULT_CACHE_DB)
+    return {"mock": _anchor.is_mock, "status": "reset", "log_path": LOG_PATH}

@@ -23,6 +23,7 @@ import sys
 
 from collector import collect_windows, build_chain, DEFAULT_WINDOW_SECONDS
 import ledger
+import anchors
 import verifier
 import tamper
 
@@ -47,6 +48,9 @@ def cmd_init_demo(args):
     if os.path.exists(args.db):
         os.remove(args.db)
     ledger.init_db(args.db)
+    # Also clear the EVM metadata cache so a fresh demo starts clean.
+    if os.path.exists(anchors.DEFAULT_CACHE_DB):
+        os.remove(anchors.DEFAULT_CACHE_DB)
     print(f"Demo reset. Working log: {args.log} (copied from {args.source}). "
           f"Fresh empty ledger: {args.db}.")
     return 0
@@ -59,13 +63,12 @@ def cmd_anchor(args):
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     records = build_chain(windows, args.window)
-    newly, already = ledger.anchor_windows(
-        records, db_path=args.db, ledger_type=args.ledger_type
-    )
-    _note(args.ledger_type)
+    anchor = anchors.get_anchor(db_path=args.db, backend=args.ledger_type)
+    newly, already = anchor.anchor(records)
+    _note(anchor.ledger_type)
     result = {
-        "mock": args.ledger_type != "testnet",
-        "ledger_type": args.ledger_type,
+        "mock": anchor.is_mock,
+        "ledger_type": anchor.ledger_type,
         "newly_anchored": newly,
         "already_anchored": already,
         "total_windows": len(records),
@@ -76,12 +79,12 @@ def cmd_anchor(args):
 
 
 def cmd_windows(args):
-    rows = ledger.get_all_windows(args.db)
-    ledger_type = rows[0]["ledger_type"] if rows else args.ledger_type
-    _note(ledger_type)
+    anchor = anchors.get_anchor(db_path=args.db, backend=args.ledger_type)
+    rows = anchor.get_windows()
+    _note(anchor.ledger_type)
     result = {
-        "mock": ledger_type != "testnet",
-        "ledger_type": ledger_type,
+        "mock": anchor.is_mock,
+        "ledger_type": anchor.ledger_type,
         "count": len(rows),
         "windows": rows,
     }
@@ -90,8 +93,9 @@ def cmd_windows(args):
 
 
 def cmd_verify(args):
+    anchor = anchors.get_anchor(db_path=args.db, backend=args.ledger_type)
     try:
-        result = verifier.verify(args.log, db_path=args.db, window_seconds=args.window)
+        result = verifier.verify(args.log, anchor, window_seconds=args.window)
     except (FileNotFoundError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

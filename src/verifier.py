@@ -19,18 +19,18 @@ timestamp an investigator should look at.
 from datetime import datetime, timezone
 
 from collector import collect_windows, build_chain, DEFAULT_WINDOW_SECONDS
-import ledger
 
 
-def verify(log_path, db_path=ledger.DEFAULT_DB_PATH,
-           window_seconds=DEFAULT_WINDOW_SECONDS):
-    """Compare the current log file against the anchored ledger.
+def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
+    """Compare the current log file against the anchored records.
 
+    `anchor` is any backend from anchors.py (LocalAnchor or EvmAnchor); the
+    verification logic is identical regardless of which one is active.
     Returns a dict matching the POST /api/verify response in API_CONTRACT.md.
     """
-    anchored = ledger.get_all_windows(db_path)
-    ledger_type = anchored[0]["ledger_type"] if anchored else "local"
-    is_mock = ledger_type != "testnet"
+    anchored = anchor.get_windows()
+    ledger_type = anchor.ledger_type
+    is_mock = anchor.is_mock
 
     base = {
         "mock": is_mock,

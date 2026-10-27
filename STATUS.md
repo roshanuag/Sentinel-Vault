@@ -5,55 +5,66 @@
 
 ## Current milestone
 
-**Milestone 1 — Collector + chained SHA-256 hashing engine: DONE and TESTED.**
+**Milestone 2 — Anchor storage + verification engine + contract: DONE and TESTED.**
 
 ## What works (real, not mock)
 
-- `src/collector.py` reads a log file, groups lines into fixed time windows (default 5 min), makes a SHA-256 fingerprint of each window, and chains each window to the previous one (mini-blockchain style).
-- Tested on `data/sample_auth.log` (12 lines → 3 windows of 4 lines each).
-- **Deterministic:** running it twice gives byte-identical output (proven by comparing SHA-256 of the two JSON outputs — they matched).
+- **Collector + chained hashing** (`src/collector.py`): logs → 5-min windows → SHA-256 fingerprint per window → chained (mini-blockchain). Deterministic.
+- **Append-only ledger** (`src/ledger.py`): SQLite store of window fingerprints. UPDATE and DELETE on anchored rows are **blocked by database triggers** (proven). This *simulates* an immutable ledger offline (`ledger_type = "local"`).
+- **Verification engine** (`src/verifier.py`): re-reads the log, re-fingerprints it, and reports each window as INTACT / TAMPERED / MISSING / UNANCHORED, and pinpoints the first broken window (index + timestamp).
+- **Tamper demo** (`src/tamper.py`): simulates an attacker modifying or deleting a line in a chosen window.
+- **CLI** (`src/vault.py`): `init-demo`, `anchor`, `windows`, `verify`, `tamper-demo`.
+- **`API_CONTRACT.md`**: full spec of 4 endpoints for Teammate 1's React dashboard. The engine already returns these exact JSON shapes.
+
+### Proof actually run (2026-10-27)
+- Clean verify → `INTACT` (3/3 windows match). Chain tip matches Milestone 1 (`01ef2f7c…`).
+- Modify a line in Window 0 → verify → Window 0 `TAMPERED` ("likely modified"), others INTACT, first break pinpointed.
+- Delete a line in Window 1 → verify → Window 1 `TAMPERED` ("line count 4 → 3, likely deleted").
+- Ledger UPDATE and DELETE both rejected: `append-only ledger: ... is not allowed`.
+
+## What is REAL vs SIMULATED (mock honesty)
+
+- **REAL:** hashing, chaining, windowing, verification, append-only DB triggers.
+- **SIMULATED (mock: true):** the "cannot ever be changed" guarantee. The local SQLite file could still be deleted by someone with full server access. True immutability needs an independent anchor — an optional live **testnet** (`ledger_type = "testnet"`), which flips `mock` to `false`. This is the agreed pluggable-adapter design; local is the offline demo default.
 
 ## What is NOT built yet
 
-- Database (SQLite) — later milestone
-- Anchor adapter (local append-only ledger as default; optional live testnet) — later
-- Verification engine (compare current logs vs anchored hashes, pinpoint tampered/missing window) — later
-- HTTP API + `API_CONTRACT.md` for the frontend — later
-- React dashboard (teammate 1) — later
+- **HTTP API server (FastAPI)** exposing the 4 endpoints — Milestone 3. The engine behind them is done and tested via CLI.
+- **React dashboard** (Teammate 1) — builds against `API_CONTRACT.md`.
+- **Live testnet adapter** (optional) — later, only if Wi-Fi allows.
 
 ## How to run / check it
 
 From the project folder:
 
 ```
-python src/collector.py data/sample_auth.log          # readable table
-python src/collector.py data/sample_auth.log --json    # JSON for the chain
-python src/collector.py data/sample_auth.log --window 300   # window size in seconds
+python src/vault.py init-demo                                # fresh working log + empty ledger
+python src/vault.py anchor                                   # record fingerprints
+python src/vault.py verify                                   # expect: Overall INTACT
+python src/vault.py tamper-demo --window-index 0 --action modify   # simulate attacker
+python src/vault.py verify                                   # expect: Window 0 TAMPERED
+python src/vault.py verify --json                            # full JSON (what the API returns)
 ```
+- **Working** = clean verify is INTACT; after tamper, the exact tampered window turns TAMPERED and the rest stay INTACT.
+- **Broken** = verify errors, or a tamper is not detected, or the wrong window is flagged.
 
-Determinism check (should print IDENTICAL):
+## Files
 
-```
-python src/collector.py data/sample_auth.log --json > a.json
-python src/collector.py data/sample_auth.log --json > b.json
-# compare a.json and b.json - they must be identical
-```
+- `src/collector.py`, `src/ledger.py`, `src/verifier.py`, `src/tamper.py`, `src/vault.py`
+- `API_CONTRACT.md`, `data/sample_auth.log`
+- Generated (git-ignored): `data/server.log`, `data/ledger.sqlite`
 
 ## Environment
 
-- Python 3.13 (uses only the standard library so far — no pip installs needed)
+- Python 3.13 — standard library only so far (no pip installs). FastAPI will be the first dependency in Milestone 3.
 - git 2.55, remote: origin → GitHub (roshanuag/Tamper-Proof-Security-Log-Vault)
 - OS: Windows 11
 
-## Anchor decision (agreed)
-
-Pluggable adapter. **Default = local append-only ledger (100% offline, no Wi-Fi/gas).** Optional switch to a live testnet (Polygon Amoy / Sepolia) only if Wi-Fi holds. Local ledger is the primary demo.
-
 ## Known issues / notes
 
-- Collector currently expects timestamps formatted `YYYY-MM-DD HH:MM:SS` at the start of each line. Classic syslog format (`Oct 27 10:00:01`, no year) is NOT parsed yet — a later enhancement if real logs need it.
-- Lines without a leading timestamp are treated as continuation of the previous window (handles multi-line entries).
+- Timestamps must look like `YYYY-MM-DD HH:MM:SS` at the start of each line. Classic syslog (`Oct 27 ...`, no year) not parsed yet.
+- Tamper detection is at **window level** (which window, and modified-vs-deleted by line-count). Exact line identification is not stored by design (we store hashes, not original logs). Per-line hashing is a possible later enhancement.
 
 ## Next step
 
-Milestone 2: write `API_CONTRACT.md` (single source of truth for the frontend), then start the verification engine + SQLite storage. Wait for go-ahead before starting.
+**Milestone 3:** wire a thin FastAPI server that exposes the 4 endpoints exactly as in `API_CONTRACT.md`, configure CORS for the frontend origin, add the MOCK_MODE startup warning, and test one valid + one invalid request per endpoint. Wait for go-ahead.

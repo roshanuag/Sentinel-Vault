@@ -149,6 +149,7 @@ The main flow has been tested end to end, real vs mock status is clear, failures
 - After completing any logical unit of work, feature implementation, or bug fix:
   1. Run `git status` to verify modified and untracked files.
   2. Run `git add .` to stage all changes.
-  3. Commit using conventional commit format (e.g., `git commit -m "feat: implement SHA-256 log window hashing"`).
-  4. Immediately push to GitHub: `git push origin main`.
+  3. Commit using clean conventional format: `git commit -m "<message>"`.
+  4. CRITICAL: Never include `Co-authored-by:`, AI attributions, or automated trailers in git commit messages. Only use standard commit messages under your author credentials.
+  5. Immediately push to GitHub: `git push origin main`.
 - Never leave unstaged or uncommitted code at the end of a response.

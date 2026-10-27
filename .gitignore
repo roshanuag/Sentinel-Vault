@@ -21,3 +21,4 @@ desktop.ini
 /output/
 *.sqlite
 *.db
+/data/server.log

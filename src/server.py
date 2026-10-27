@@ -45,7 +45,11 @@ LOG_PATH = os.environ.get("LOG_PATH", "data/server.log")
 DB_PATH = os.environ.get("DB_PATH", ledger.DEFAULT_DB_PATH)
 SAMPLE_PATH = os.environ.get("SAMPLE_PATH", "data/sample_auth.log")
 WINDOW_SECONDS = int(os.environ.get("WINDOW_SECONDS", DEFAULT_WINDOW_SECONDS))
-FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
+# Comma-separated list of allowed frontend origins (frontend/ on 5173, frontend2/ on 5174).
+FRONTEND_ORIGIN = os.environ.get(
+    "FRONTEND_ORIGIN", "http://localhost:5173,http://localhost:5174"
+)
+ALLOWED_ORIGINS = [o.strip() for o in FRONTEND_ORIGIN.split(",") if o.strip()]
 
 # The active anchor backend, built once at startup.
 _anchor = None
@@ -70,7 +74,7 @@ app = FastAPI(title="Tamper-Proof Security Log Vault", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_ORIGIN],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

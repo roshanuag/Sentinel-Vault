@@ -104,3 +104,31 @@ def test_tamper_demo_ignores_log_path_and_only_touches_demo_log(client, tmp_path
     # ... and the server's own demo log (LOG_PATH) is what actually changed.
     with open(server.LOG_PATH, encoding="utf-8") as fh:
         assert fh.read() != demo_before
+
+
+def test_anchor_ignores_log_path_and_anchors_only_the_demo_log(client, tmp_path):
+    from collector import collect_windows, build_chain
+
+    # A canary log with DIFFERENT content (so different fingerprints).
+    canary = tmp_path / "canary.log"
+    canary.write_text(
+        "2026-10-27 10:00:05 server sshd[9]: canary content alpha\n"
+        "2026-10-27 10:05:05 server sshd[9]: canary content bravo\n"
+        "2026-10-27 10:10:05 server sshd[9]: canary content charlie\n",
+        encoding="utf-8",
+    )
+    demo_hash0 = build_chain(collect_windows(server.LOG_PATH, 300), 300)[0]["log_hash"]
+    canary_hash0 = build_chain(collect_windows(str(canary), 300), 300)[0]["log_hash"]
+    assert demo_hash0 != canary_hash0  # sanity: the two logs fingerprint differently
+
+    # Anchor while smuggling in a different log_path.
+    r = client.post("/api/anchor", headers=KEY, json={"log_path": str(canary)})
+    assert r.status_code == 200
+    assert r.json()["total_windows"] == 3  # the demo log's window count
+
+    # The ledger holds the DEMO log's fingerprint, not the canary's.
+    # (GET /api/windows returns raw ledger rows, keyed "window_index".)
+    windows = client.get("/api/windows").json()["windows"]
+    stored_hash0 = next(w for w in windows if w["window_index"] == 0)["log_hash"]
+    assert stored_hash0 == demo_hash0
+    assert stored_hash0 != canary_hash0

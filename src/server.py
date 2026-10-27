@@ -157,14 +157,6 @@ def reset_rate_limits():
 
 
 # ---- Request models ---------------------------------------------------------
-class AnchorRequest(BaseModel):
-    log_path: Optional[str] = None
-
-
-class VerifyRequest(BaseModel):
-    log_path: Optional[str] = None
-
-
 class TamperRequest(BaseModel):
     # No log_path: this endpoint only ever touches the server's configured LOG_PATH.
     window_index: int
@@ -194,12 +186,12 @@ def get_windows():
 
 
 @app.post("/api/anchor", dependencies=[Depends(require_api_key), Depends(rate_limit_anchor)])
-def post_anchor(req: AnchorRequest = AnchorRequest()):
-    log_path = req.log_path or LOG_PATH
+def post_anchor():
+    # Always the configured demo log - never a caller-supplied path.
     try:
-        windows = collect_windows(log_path, WINDOW_SECONDS)
+        windows = collect_windows(LOG_PATH, WINDOW_SECONDS)
     except FileNotFoundError:
-        return _error(400, f"log file not found: {log_path!r}")
+        return _error(400, f"log file not found: {LOG_PATH!r}")
     except ValueError as exc:
         return _error(400, str(exc))
 
@@ -216,12 +208,12 @@ def post_anchor(req: AnchorRequest = AnchorRequest()):
 
 
 @app.post("/api/verify", dependencies=[Depends(require_api_key)])
-def post_verify(req: VerifyRequest = VerifyRequest()):
-    log_path = req.log_path or LOG_PATH
+def post_verify():
+    # Always the configured demo log - never a caller-supplied path.
     try:
-        return verifier.verify(log_path, _anchor, window_seconds=WINDOW_SECONDS)
+        return verifier.verify(LOG_PATH, _anchor, window_seconds=WINDOW_SECONDS)
     except FileNotFoundError:
-        return _error(400, f"log file not found: {log_path!r}")
+        return _error(400, f"log file not found: {LOG_PATH!r}")
     except ValueError as exc:
         return _error(400, str(exc))
 

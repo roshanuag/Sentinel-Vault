@@ -56,10 +56,7 @@ Return everything currently anchored in the ledger (does **not** re-read logs).
 
 Fingerprint the current log's windows and append any **new** ones to the ledger. Already-anchored windows are left untouched (append-only).
 
-**Request body (all fields optional):**
-```json
-{ "log_path": "data/server.log" }
-```
+**Request body:** none. The server always uses its configured log (`LOG_PATH`); it takes **no** `log_path`, and any `log_path` sent in the body is ignored. (Anchor **writes** fingerprints to the ledger, so it must never be pointed at an arbitrary file — that is why this endpoint is locked to `LOG_PATH`.)
 
 **Response 200:**
 ```json
@@ -74,7 +71,7 @@ Fingerprint the current log's windows and append any **new** ones to the ledger.
 ```
 
 **Errors:**
-- `400` — log file missing or has no timestamped lines:
+- `400` — the server's configured log is missing or has no timestamped lines:
 ```json
 { "error": "log file not found: 'data/server.log'" }
 ```
@@ -85,10 +82,7 @@ Fingerprint the current log's windows and append any **new** ones to the ledger.
 
 Re-read the current log, fingerprint it the same way, and compare each window against the ledger.
 
-**Request body (all fields optional):**
-```json
-{ "log_path": "data/server.log" }
-```
+**Request body:** none. The server always uses its configured log (`LOG_PATH`); it takes **no** `log_path`, and any `log_path` sent in the body is ignored.
 
 **Response 200:**
 ```json
@@ -134,7 +128,7 @@ Re-read the current log, fingerprint it the same way, and compare each window ag
 **Suggested dashboard colours:** `INTACT` = green, `TAMPERED` = red, `MISSING` = grey/black, `UNANCHORED` = amber, `LEDGER_TAMPERED` = purple.
 
 **Errors:**
-- `400` — log file missing or invalid (same shape as `/api/anchor`).
+- `400` — the server's configured log is missing or invalid (same shape as `/api/anchor`).
 
 ---
 

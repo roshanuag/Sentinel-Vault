@@ -8,6 +8,7 @@ import { TamperConsole } from "./components/TamperConsole";
 import { Timeline } from "./components/Timeline";
 import { InspectDrawer } from "./components/InspectDrawer";
 import { AdminPanel } from "./components/AdminPanel";
+import { AdminLoginModal } from "./components/AdminLoginModal";
 import { api, WindowObject, VerifyResponse } from "./lib/api";
 import { playSuccess, playAlarm, playClick } from "./lib/sound";
 import { Shield, Sparkles, Lock } from "lucide-react";
@@ -41,11 +42,25 @@ export default function App() {
 
   // View State: "dashboard" (Forensics SOC) vs "admin" (Main Admin Panel)
   const [view, setView] = useState<"dashboard" | "admin">("dashboard");
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem("sentinel_admin_auth") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handleHash = () => {
       if (window.location.hash === "#admin") {
-        setView("admin");
+        const authed = sessionStorage.getItem("sentinel_admin_auth") === "true";
+        if (authed) {
+          setView("admin");
+        } else {
+          setView("dashboard");
+          setIsLoginModalOpen(true);
+        }
       } else if (window.location.hash === "#vault-soc" || window.location.hash === "#hero") {
         setView("dashboard");
       }
@@ -54,6 +69,31 @@ export default function App() {
     window.addEventListener("hashchange", handleHash);
     return () => window.removeEventListener("hashchange", handleHash);
   }, []);
+
+  const handleOpenAdminPanel = () => {
+    playClick();
+    if (isAuthenticated || sessionStorage.getItem("sentinel_admin_auth") === "true") {
+      setView("admin");
+      window.location.hash = "#admin";
+    } else {
+      setIsLoginModalOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    setIsLoginModalOpen(false);
+    setView("admin");
+    window.location.hash = "#admin";
+  };
+
+  const handleLogout = () => {
+    playClick();
+    sessionStorage.removeItem("sentinel_admin_auth");
+    setIsAuthenticated(false);
+    setView("dashboard");
+    window.location.hash = "#vault-soc";
+  };
 
   // Apply verify payload to state
   const applyVerifyData = useCallback((data: VerifyResponse) => {
@@ -207,6 +247,7 @@ export default function App() {
           setView("dashboard");
           window.location.hash = "#vault-soc";
         }}
+        onLogout={handleLogout}
       />
     );
   }
@@ -252,7 +293,7 @@ export default function App() {
           Honesty badge, IntegrityHero, CommandBar, TamperConsole,
           Chained Timeline, and InspectDrawer.
          ──────────────────────────────────────────────────────────────── */}
-      <section id="vault-soc" className="relative z-10 border-t border-[#D5CDBD] bg-[#F7F4EE]">
+      <section id="vault-soc" className="relative z-10 bg-[#F7F4EE]">
         {/* Dynamic ambient warm glow behind the page */}
         <div
           className={`ambient-glow ${overall === "COMPROMISED" ? "ambient-glow-compromised" : ""}`}
@@ -263,7 +304,7 @@ export default function App() {
           apiUp={apiUp}
           mode={mode}
           onToggleMode={handleToggleMode}
-          onOpenAdminPanel={() => setView("admin")}
+          onOpenAdminPanel={handleOpenAdminPanel}
         />
 
         {/* Main SOC Container */}
@@ -271,9 +312,12 @@ export default function App() {
 
           {/* Global Error Alert if any */}
           {error && (
-            <div className="p-4 rounded-[6px] bg-[#FCFAF7] border border-[#BA4A38]/40 text-xs font-mono text-[#BA4A38] flex items-center justify-between shadow-sm">
+            <div className="p-4 rounded-xl liquid-glass-inner border border-[#BA4A38]/40 text-xs font-mono text-[#BA4A38] flex items-center justify-between shadow-sm">
               <span>{error}</span>
-              <button onClick={() => setError(null)} className="underline hover:text-[#2A2421] ml-2 font-bold cursor-pointer">
+              <button
+                onClick={() => setError(null)}
+                className="liquid-glass-btn px-3 py-1 rounded-full text-[11px] text-[#BA4A38] ml-2 font-bold cursor-pointer"
+              >
                 Dismiss
               </button>
             </div>
@@ -329,7 +373,7 @@ export default function App() {
         </main>
 
         {/* Footer */}
-        <footer className="mt-12 py-6 border-t border-[#D5CDBD] text-center text-xs font-mono text-[#7E756B] bg-[#FCFAF7]">
+        <footer className="mt-12 py-6 border-t border-[#D5CDBD] text-center text-xs font-mono text-[#7E756B] liquid-glass-card rounded-b-none">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <a href="#hero" className="text-[#A07855] hover:underline flex items-center gap-1 font-serif font-bold">
@@ -345,38 +389,48 @@ export default function App() {
         </footer>
       </section>
 
-      {/* Quick Floating View Switcher (Hero ⟷ Vault SOC) */}
-      <div className="fixed bottom-6 right-6 z-40 hidden sm:flex items-center gap-2 p-1.5 rounded-[6px] bg-[#FFFFFF] border border-[#D5CDBD] shadow-xl font-mono text-xs">
+      {/* Quick Floating View Switcher (Hero ⟷ Vault SOC ⟷ Admin) Centered */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-full css-glassmorphism-pill shadow-xl font-mono text-xs">
         <a
           href="#hero"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] hover:bg-[#EDE6DA] text-[#7E756B] hover:text-[#2A2421] transition-colors"
+          className="liquid-glass-btn flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[#7E756B] hover:text-[#2A2421] transition-colors"
           title="Jump to Sculpture Hero Front Page"
         >
-          <Sparkles className="w-3.5 h-3.5 text-[#A07855]" />
-          <span className="font-serif font-medium">Hero View</span>
+          <span className="btn-icon w-5 h-5 text-white">
+            <Sparkles className="w-3 h-3 text-[#A07855]" />
+          </span>
+          <span className="font-serif font-medium whitespace-nowrap">Hero View</span>
         </a>
         <span className="text-[#D5CDBD]">|</span>
         <a
           href="#vault-soc"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] hover:bg-[#EDE6DA] text-[#7E756B] hover:text-[#2A2421] transition-colors"
+          className="liquid-glass-btn flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[#7E756B] hover:text-[#2A2421] transition-colors"
           title="Jump to SentinelVault Forensics SOC"
         >
-          <Shield className="w-3.5 h-3.5 text-[#A07855]" />
-          <span className="font-serif font-medium">Forensics SOC</span>
+          <span className="btn-icon w-5 h-5 text-white">
+            <Shield className="w-3 h-3 text-[#A07855]" />
+          </span>
+          <span className="font-serif font-medium whitespace-nowrap">Forensics SOC</span>
         </a>
         <span className="text-[#D5CDBD]">|</span>
         <button
-          onClick={() => {
-            playClick();
-            setView("admin");
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] hover:bg-[#EDE6DA] text-[#7E756B] hover:text-[#2A2421] transition-colors cursor-pointer"
+          onClick={handleOpenAdminPanel}
+          className="liquid-glass-btn flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[#7E756B] hover:text-[#2A2421] transition-colors cursor-pointer"
           title="Open Simple Main Admin Panel"
         >
-          <Lock className="w-3.5 h-3.5 text-[#A07855]" />
-          <span className="font-serif font-medium">Admin Panel</span>
+          <span className="btn-icon w-5 h-5 text-white">
+            <Lock className="w-3 h-3 text-[#A07855]" />
+          </span>
+          <span className="font-serif font-medium whitespace-nowrap">Admin Panel</span>
         </button>
       </div>
+
+      {/* Admin Authentication Login Modal */}
+      <AdminLoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={handleLoginSuccess}
+      />
     </div>
   );
 }

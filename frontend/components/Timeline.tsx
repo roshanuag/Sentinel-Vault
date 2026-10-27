@@ -41,20 +41,21 @@ export const Timeline: React.FC<TimelineProps> = ({
           </span>
         </div>
 
-        {/* Filter Pills styled like the screenshot */}
-        <div className="flex items-center gap-1.5 font-sans text-xs">
+        {/* Filter Pills styled with liquid glass */}
+        <div className="flex items-center gap-2 font-sans text-xs">
           <button
             onClick={() => {
               playClick();
               setFilter("ALL");
             }}
-            className={`px-3 py-1 rounded-[6px] border transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
               filter === "ALL"
-                ? "bg-[#A07855] border-[#8D6544] text-white font-semibold shadow-sm"
-                : "bg-[#FFFFFF] border-[#D5CDBD] text-[#7E756B] hover:text-[#2A2421]"
+                ? "liquid-glass-primary font-semibold text-white shadow-xs"
+                : "liquid-glass-btn text-[#7E756B] hover:text-[#2A2421]"
             }`}
           >
-            All ({windows.length})
+            <span>All</span>
+            <span className="btn-icon w-4 h-4 text-[10px]">{windows.length}</span>
           </button>
 
           <button
@@ -62,13 +63,14 @@ export const Timeline: React.FC<TimelineProps> = ({
               playClick();
               setFilter("INTACT");
             }}
-            className={`px-3 py-1 rounded-[6px] border transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
               filter === "INTACT"
-                ? "bg-[#2E7D5B] border-[#256649] text-white font-semibold shadow-sm"
-                : "bg-[#FFFFFF] border-[#D5CDBD] text-[#7E756B] hover:text-[#2E7D5B]"
+                ? "liquid-glass-primary font-semibold text-white shadow-xs"
+                : "liquid-glass-btn text-[#7E756B] hover:text-[#2E7D5B]"
             }`}
           >
-            Intact ({intactCount})
+            <span>Intact</span>
+            <span className="btn-icon w-4 h-4 text-[10px] text-[#2E7D5B]">{intactCount}</span>
           </button>
 
           <button
@@ -76,13 +78,14 @@ export const Timeline: React.FC<TimelineProps> = ({
               playClick();
               setFilter("TAMPERED");
             }}
-            className={`px-3 py-1 rounded-[6px] border transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
               filter === "TAMPERED"
-                ? "bg-[#BA4A38] border-[#A53E2D] text-white font-semibold shadow-sm"
-                : "bg-[#FFFFFF] border-[#D5CDBD] text-[#7E756B] hover:text-[#BA4A38]"
+                ? "liquid-glass-destructive font-semibold text-white shadow-xs"
+                : "liquid-glass-btn text-[#7E756B] hover:text-[#BA4A38]"
             }`}
           >
-            Tampered ({tamperedCount})
+            <span>Tampered</span>
+            <span className="btn-icon w-4 h-4 text-[10px] text-[#BA4A38]">{tamperedCount}</span>
           </button>
 
           {missingCount > 0 && (
@@ -91,13 +94,14 @@ export const Timeline: React.FC<TimelineProps> = ({
                 playClick();
                 setFilter("MISSING");
               }}
-              className={`px-3 py-1 rounded-[6px] border transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                 filter === "MISSING"
-                  ? "bg-[#857E76] border-[#6D6760] text-white font-semibold shadow-sm"
-                  : "bg-[#FFFFFF] border-[#D5CDBD] text-[#7E756B] hover:text-[#2A2421]"
+                  ? "liquid-glass-btn font-semibold text-[#2A2421] shadow-xs"
+                  : "liquid-glass-btn text-[#7E756B] hover:text-[#2A2421]"
               }`}
             >
-              Missing ({missingCount})
+              <span>Missing</span>
+              <span className="btn-icon w-4 h-4 text-[10px]">{missingCount}</span>
             </button>
           )}
         </div>
@@ -106,7 +110,7 @@ export const Timeline: React.FC<TimelineProps> = ({
       {/* Chained Cards List */}
       <div className="space-y-1">
         {filteredWindows.length === 0 ? (
-          <div className="bg-[#FFFFFF] p-8 rounded-[6px] border border-[#D5CDBD] text-center font-mono text-sm text-[#7E756B] shadow-sm">
+          <div className="liquid-glass-card p-8 rounded-2xl text-center font-mono text-sm text-[#7E756B] shadow-xs">
             No windows matching filter: <span className="text-[#2A2421] font-bold">{filter}</span>
           </div>
         ) : (

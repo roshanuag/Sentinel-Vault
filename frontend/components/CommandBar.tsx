@@ -20,8 +20,8 @@ export const CommandBar: React.FC<CommandBarProps> = ({
   const isBusy = busy !== null;
 
   return (
-    <div className="bg-[#FFFFFF] p-4 rounded-[6px] border border-[#D5CDBD] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-      {/* Action Buttons styled with 6px border-radius */}
+    <div className="liquid-glass-card p-5 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Action Buttons styled with liquid glass */}
       <div className="flex flex-wrap items-center gap-3 w-full md:w-auto font-sans">
         {/* Verify Integrity Button (Primary Style) */}
         <button
@@ -30,13 +30,15 @@ export const CommandBar: React.FC<CommandBarProps> = ({
             onVerify();
           }}
           disabled={isBusy}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-[6px] text-sm transition-all bg-[#A07855] hover:bg-[#8D6544] text-white font-semibold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full text-sm liquid-glass-primary font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          {busy === "verify" ? (
-            <Loader2 className="w-4 h-4 animate-spin text-white" />
-          ) : (
-            <ShieldCheck className="w-4 h-4" />
-          )}
+          <span className="btn-icon w-6 h-6 bg-black/40 text-white">
+            {busy === "verify" ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+            ) : (
+              <ShieldCheck className="w-3.5 h-3.5 text-white" />
+            )}
+          </span>
           <span>{busy === "verify" ? "Verifying Chain..." : "Verify Integrity"}</span>
         </button>
 
@@ -47,13 +49,15 @@ export const CommandBar: React.FC<CommandBarProps> = ({
             onAnchor();
           }}
           disabled={isBusy}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-[6px] text-sm transition-all bg-[#E4DFD7] hover:bg-[#D9D3CA] text-[#2A2421] border border-[#D5CDBD] font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-full text-sm liquid-glass-btn text-[#2A2421] font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          {busy === "anchor" ? (
-            <Loader2 className="w-4 h-4 animate-spin text-[#A07855]" />
-          ) : (
-            <Anchor className="w-4 h-4 text-[#A07855]" />
-          )}
+          <span className="btn-icon w-6 h-6 text-white">
+            {busy === "anchor" ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#A07855]" />
+            ) : (
+              <Anchor className="w-3.5 h-3.5 text-[#A07855]" />
+            )}
+          </span>
           <span>{busy === "anchor" ? "Anchoring..." : "Anchor Logs"}</span>
         </button>
 
@@ -64,21 +68,23 @@ export const CommandBar: React.FC<CommandBarProps> = ({
             onReset();
           }}
           disabled={isBusy}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-[6px] text-sm transition-all bg-[#FFFFFF] hover:bg-[#EDE6DA] text-[#7E756B] hover:text-[#2A2421] border border-[#D5CDBD] font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-full text-sm liquid-glass-btn text-[#7E756B] hover:text-[#2A2421] font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           title="Restore pristine original logs and baseline ledger"
         >
-          {busy === "reset" ? (
-            <Loader2 className="w-4 h-4 animate-spin text-[#A07855]" />
-          ) : (
-            <RefreshCw className="w-4 h-4" />
-          )}
+          <span className="btn-icon w-6 h-6 text-white">
+            {busy === "reset" ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#A07855]" />
+            ) : (
+              <RefreshCw className="w-3.5 h-3.5" />
+            )}
+          </span>
           <span>Reset Demo</span>
         </button>
       </div>
 
       {/* Operation Feedback Message */}
       {message && (
-        <div className="w-full md:w-auto flex items-center gap-2 px-3 py-1.5 rounded-[6px] bg-[#FCFAF7] border border-[#D5CDBD] text-xs font-mono text-[#7E756B] animate-in fade-in">
+        <div className="w-full md:w-auto flex items-center gap-2 px-4 py-2 rounded-full liquid-glass-pill text-xs font-mono text-[#7E756B] animate-in fade-in">
           <Info className="w-3.5 h-3.5 text-[#A07855] shrink-0" />
           <span className="truncate max-w-md">{message}</span>
         </div>

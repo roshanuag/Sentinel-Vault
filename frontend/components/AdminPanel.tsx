@@ -18,14 +18,16 @@ import {
   AlertTriangle,
   RefreshCw,
   Search,
+  LogOut,
 } from "lucide-react";
 import { playClick, playAlarm, playSuccess } from "../lib/sound";
 
 interface AdminPanelProps {
   onBackToDashboard: () => void;
+  onLogout?: () => void;
 }
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => {
+export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard, onLogout }) => {
   // State
   const [records, setRecords] = useState<AdminRecord[]>([]);
   const [history, setHistory] = useState<AuditHistoryEntry[]>([]);
@@ -280,17 +282,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] text-[#1F2937] font-sans antialiased p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-[#F7F4EE] vintage-paper-bg text-[#2A2421] font-sans antialiased p-4 sm:p-6 lg:p-8">
       {/* ────────────────────────────────────────────────────────────
-          1. SIMPLE ADMIN HEADER (Plain / Functional Software UI)
+          1. SIMPLE ADMIN HEADER (Liquid Glass UI)
          ──────────────────────────────────────────────────────────── */}
-      <header className="bg-white border border-[#D1D5DB] rounded-[6px] p-4 mb-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <header className="liquid-glass-card rounded-2xl p-5 mb-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold tracking-tight text-[#111827]">
               SentinelVault — Main Admin Panel
             </h1>
-            <span className="px-2.5 py-0.5 rounded-[4px] text-xs font-mono font-semibold bg-[#E5E7EB] text-[#374151] border border-[#D1D5DB]">
+            <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold liquid-glass-pill text-[#374151]">
               ROOT ACCESS
             </span>
           </div>
@@ -299,33 +301,53 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            playClick();
-            onBackToDashboard();
-          }}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-[6px] bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#1F2937] text-xs font-medium border border-[#9CA3AF] transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Exit to Forensics SOC Dashboard</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => {
+              playClick();
+              onBackToDashboard();
+            }}
+            className="liquid-glass-btn flex items-center gap-2 px-4 py-2 rounded-full text-[#1F2937] text-xs font-medium transition-all cursor-pointer shadow-xs"
+          >
+            <span className="btn-icon w-5 h-5 text-white">
+              <ArrowLeft className="w-3 h-3" />
+            </span>
+            <span>Exit to Forensics SOC</span>
+          </button>
+
+          {onLogout && (
+            <button
+              onClick={() => {
+                playClick();
+                onLogout();
+              }}
+              className="liquid-glass-destructive flex items-center gap-2 px-4 py-2 rounded-full text-white text-xs font-medium transition-all cursor-pointer shadow-xs"
+              title="Lock admin panel and log out"
+            >
+              <span className="btn-icon w-5 h-5 text-white">
+                <LogOut className="w-3 h-3 text-white" />
+              </span>
+              <span>Logout</span>
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Operation Notice Banner */}
       {notice && (
         <div
-          className={`p-3.5 mb-6 rounded-[6px] border text-xs font-mono flex items-center justify-between shadow-sm ${
+          className={`p-3.5 mb-6 rounded-xl border text-xs font-mono flex items-center justify-between shadow-sm liquid-glass-inner ${
             notice.type === "success"
-              ? "bg-[#DEF7EC] border-[#31C48D] text-[#03543F]"
+              ? "border-[#31C48D]/40 text-[#03543F]"
               : notice.type === "warn"
-              ? "bg-[#FDE8E8] border-[#F98080] text-[#9B1C1C]"
-              : "bg-[#E1EFFE] border-[#76A9FA] text-[#1E429F]"
+              ? "border-[#F98080]/40 text-[#9B1C1C]"
+              : "border-[#76A9FA]/40 text-[#1E429F]"
           }`}
         >
           <span>{notice.text}</span>
           <button
             onClick={() => setNotice(null)}
-            className="font-bold underline ml-3 cursor-pointer"
+            className="liquid-glass-btn px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-[#1F2937] ml-3 cursor-pointer"
           >
             Dismiss
           </button>
@@ -335,9 +357,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
       {/* ────────────────────────────────────────────────────────────
           2. DATA MANAGEMENT (EDITABLE & DELETABLE DATA)
          ──────────────────────────────────────────────────────────── */}
-      <section className="bg-white border border-[#D1D5DB] rounded-[6px] shadow-sm mb-8 overflow-hidden">
+      <section className="liquid-glass-card rounded-2xl shadow-sm mb-8 overflow-hidden">
         {/* Table Header Bar */}
-        <div className="p-4 bg-[#F9FAFB] border-b border-[#D1D5DB] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-4 bg-white/40 border-b border-[#D5CDBD]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-[#374151]">
               Active Configuration & Security Records
@@ -350,22 +372,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
           <div className="flex items-center gap-3">
             {/* Search Input */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
               <input
                 type="text"
                 placeholder="Search records..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs border border-[#D1D5DB] rounded-[6px] focus:outline-none focus:border-[#4B5563]"
+                className="pl-9 pr-4 py-2 text-xs rounded-full css-glassmorphism-textbox text-[#2A2421]"
               />
             </div>
 
             {/* Add Record Button */}
             <button
               onClick={handleOpenCreate}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#1F2937] hover:bg-[#111827] text-white text-xs font-medium transition-colors cursor-pointer"
+              className="liquid-glass-primary flex items-center gap-2 px-4 py-2 rounded-full text-white text-xs font-semibold transition-all cursor-pointer shadow-md"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <span className="btn-icon w-5 h-5 bg-black/40 text-white">
+                <Plus className="w-3 h-3 text-white" />
+              </span>
               <span>Add Record</span>
             </button>
           </div>
@@ -375,7 +399,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#F3F4F6] text-[#4B5563] border-b border-[#D1D5DB] font-semibold">
+              <tr className="bg-black/5 text-[#4B5563] border-b border-[#D1D5DB] font-semibold">
                 <th className="py-2.5 px-4">Record ID</th>
                 <th className="py-2.5 px-4">Category</th>
                 <th className="py-2.5 px-4">Name</th>
@@ -394,7 +418,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                 </tr>
               ) : (
                 filteredRecords.map((r) => (
-                  <tr key={r.id} className="hover:bg-[#F9FAFB] transition-colors">
+                  <tr key={r.id} className="hover:bg-white/40 transition-colors">
                     <td className="py-3 px-4 font-mono font-bold text-[#111827]">{r.id}</td>
                     <td className="py-3 px-4 text-[#4B5563]">{r.category}</td>
                     <td className="py-3 px-4 font-semibold text-[#111827]">{r.name}</td>
@@ -403,12 +427,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-0.5 rounded-[4px] text-[10px] font-mono font-bold uppercase ${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase liquid-glass-pill ${
                           r.status === "ACTIVE"
-                            ? "bg-[#DEF7EC] text-[#03543F] border border-[#31C48D]"
+                            ? "text-[#03543F]"
                             : r.status === "RESTRICTED"
-                            ? "bg-[#FDE8E8] text-[#9B1C1C] border border-[#F98080]"
-                            : "bg-[#FEF08A] text-[#713F12] border border-[#FACC15]"
+                            ? "text-[#9B1C1C]"
+                            : "text-[#713F12]"
                         }`}
                       >
                         {r.status}
@@ -418,19 +442,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <button
                         onClick={() => handleOpenEdit(r)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#1F2937] font-medium mr-2 transition-colors cursor-pointer"
+                        className="liquid-glass-btn inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[#1F2937] font-medium mr-2 transition-all cursor-pointer shadow-xs"
                         title="Edit Record"
                       >
-                        <Edit2 className="w-3 h-3 text-[#4B5563]" />
+                        <span className="btn-icon w-4 h-4 text-white">
+                          <Edit2 className="w-2.5 h-2.5 text-[#4B5563]" />
+                        </span>
                         <span>Edit</span>
                       </button>
 
                       <button
                         onClick={() => handleDeleteRecord(r)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-[#FEE2E2] hover:bg-[#FCA5A5] text-[#991B1B] font-medium transition-colors cursor-pointer"
+                        className="liquid-glass-destructive inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white font-medium transition-all cursor-pointer shadow-xs"
                         title="Delete Record"
                       >
-                        <Trash2 className="w-3 h-3 text-[#991B1B]" />
+                        <span className="btn-icon w-4 h-4 bg-black/40 text-white">
+                          <Trash2 className="w-2.5 h-2.5 text-white" />
+                        </span>
                         <span>Delete</span>
                       </button>
                     </td>
@@ -445,16 +473,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
       {/* ────────────────────────────────────────────────────────────
           3. IMMUTABLE HISTORY LOG (READ-ONLY · CANNOT BE ALTERED)
          ──────────────────────────────────────────────────────────── */}
-      <section className="bg-white border border-[#D1D5DB] rounded-[6px] shadow-sm overflow-hidden">
+      <section className="liquid-glass-card rounded-2xl shadow-sm overflow-hidden">
         {/* Table Header Bar */}
-        <div className="p-4 bg-[#F9FAFB] border-b border-[#D1D5DB] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-4 bg-white/40 border-b border-[#D5CDBD]/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-[#D97706]" />
               <h2 className="text-sm font-bold uppercase tracking-wider text-[#111827]">
                 Immutable History Log (Changelog & Audit Ledger)
               </h2>
-              <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-mono font-bold uppercase bg-[#FEF3C7] text-[#92400E] border border-[#FCD34D]">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase liquid-glass-pill text-[#92400E]">
                 APPEND-ONLY · READ ONLY
               </span>
             </div>
@@ -465,7 +493,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
 
           {/* Cryptographic Verification Status */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] bg-[#F3F4F6] border border-[#D1D5DB] text-xs font-mono">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-pill text-xs font-mono">
               {verificationResult?.valid ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-[#059669]" />
@@ -482,9 +510,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
 
             <button
               onClick={handleVerifyChain}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#1F2937] text-xs font-medium border border-[#9CA3AF] transition-colors cursor-pointer"
+              className="liquid-glass-btn flex items-center gap-2 px-4 py-2 rounded-full text-[#1F2937] text-xs font-semibold transition-all cursor-pointer shadow-xs"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-[#4B5563]" />
+              <span className="btn-icon w-5 h-5 text-white">
+                <RefreshCw className="w-3 h-3 text-[#4B5563]" />
+              </span>
               <span>Verify Integrity</span>
             </button>
           </div>
@@ -494,7 +524,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#F3F4F6] text-[#4B5563] border-b border-[#D1D5DB] font-semibold font-mono">
+              <tr className="bg-black/5 text-[#4B5563] border-b border-[#D1D5DB] font-semibold font-mono">
                 <th className="py-2.5 px-4">Log ID</th>
                 <th className="py-2.5 px-4">Timestamp (UTC)</th>
                 <th className="py-2.5 px-4">Action</th>
@@ -522,10 +552,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                       key={h.historyId}
                       className={
                         h.action === "DELETE"
-                          ? "bg-[#FEF2F2] hover:bg-[#FEE2E2]"
+                          ? "bg-[#BA4A38]/10 hover:bg-[#BA4A38]/15"
                           : h.action === "EDIT"
-                          ? "bg-[#FFFBEB] hover:bg-[#FEF3C7]"
-                          : "hover:bg-[#F9FAFB]"
+                          ? "bg-[#B87720]/10 hover:bg-[#B87720]/15"
+                          : "hover:bg-white/40"
                       }
                     >
                       <td className="py-3 px-4 font-bold text-[#111827]">{h.historyId}</td>
@@ -534,12 +564,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                       </td>
                       <td className="py-3 px-4">
                         <span
-                          className={`px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase ${
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase liquid-glass-pill ${
                             h.action === "DELETE"
-                              ? "bg-[#FDE8E8] text-[#9B1C1C] border border-[#F98080]"
+                              ? "text-[#9B1C1C]"
                               : h.action === "EDIT"
-                              ? "bg-[#FEF08A] text-[#713F12] border border-[#FACC15]"
-                              : "bg-[#DEF7EC] text-[#03543F] border border-[#31C48D]"
+                              ? "text-[#713F12]"
+                              : "text-[#03543F]"
                           }`}
                         >
                           {h.action}
@@ -571,7 +601,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                       </td>
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <span
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[10px] font-bold bg-[#F3F4F6] text-[#4B5563] border border-[#D1D5DB]"
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold liquid-glass-pill text-[#4B5563]"
                           title="Admin cannot alter or delete history entries. History is permanently append-only."
                         >
                           <Lock className="w-2.5 h-2.5 text-[#6B7280]" />
@@ -591,7 +621,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
          ──────────────────────────────────────────────────────────── */}
       {(editingRecord || isCreatingNew) && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-[#9CA3AF] rounded-[6px] shadow-xl w-full max-w-lg p-6 animate-in fade-in zoom-in-95 duration-150">
+          <div className="liquid-glass-card rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#E5E7EB]">
               <h3 className="text-base font-bold text-[#111827]">
                 {isCreatingNew ? "Create New Configuration Record" : `Edit Record: ${editingRecord?.id}`}
@@ -608,7 +638,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                   type="text"
                   value={formData.id}
                   disabled
-                  className="w-full p-2 border border-[#D1D5DB] rounded-[6px] bg-[#F3F4F6] font-mono text-gray-500"
+                  className="w-full p-2.5 rounded-full css-glassmorphism-textbox font-mono text-gray-500 opacity-70"
                 />
               </div>
 
@@ -619,7 +649,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   required
-                  className="w-full p-2 border border-[#D1D5DB] rounded-[6px] focus:outline-none focus:border-[#4B5563]"
+                  className="w-full p-2.5 rounded-full css-glassmorphism-textbox text-[#2A2421]"
                 />
               </div>
 
@@ -630,7 +660,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full p-2 border border-[#D1D5DB] rounded-[6px] focus:outline-none focus:border-[#4B5563]"
+                  className="w-full p-2.5 rounded-full css-glassmorphism-textbox text-[#2A2421]"
                 />
               </div>
 
@@ -643,7 +673,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: e.target.value })}
                   required
-                  className="w-full p-2 border border-[#D1D5DB] rounded-[6px] font-mono focus:outline-none focus:border-[#4B5563]"
+                  className="w-full p-2.5 rounded-xl font-mono css-glassmorphism-textbox text-[#2A2421]"
                 />
               </div>
 
@@ -657,7 +687,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                       status: e.target.value as "ACTIVE" | "MAINTENANCE" | "RESTRICTED",
                     })
                   }
-                  className="w-full p-2 border border-[#D1D5DB] rounded-[6px] bg-white focus:outline-none focus:border-[#4B5563]"
+                  className="w-full p-2.5 rounded-full css-glassmorphism-textbox text-[#2A2421]"
                 >
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="MAINTENANCE">MAINTENANCE</option>
@@ -665,7 +695,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                 </select>
               </div>
 
-              <div className="pt-4 border-t border-[#E5E7EB] flex items-center justify-end gap-2.5">
+              <div className="pt-4 border-t border-[#E5E7EB] flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -673,15 +703,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToDashboard }) => 
                     setEditingRecord(null);
                     setIsCreatingNew(false);
                   }}
-                  className="px-4 py-2 rounded-[6px] border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#374151] font-medium transition-colors cursor-pointer"
+                  className="liquid-glass-btn px-4 py-2 rounded-full text-[#374151] font-medium transition-all cursor-pointer shadow-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-[6px] bg-[#1F2937] hover:bg-[#111827] text-white font-semibold transition-colors cursor-pointer"
+                  className="liquid-glass-primary flex items-center gap-2 px-5 py-2 rounded-full text-white font-semibold transition-all cursor-pointer shadow-md"
                 >
-                  Save & Log to Audit Trail
+                  <span className="btn-icon w-5 h-5 bg-black/40 text-white">
+                    <CheckCircle2 className="w-3 h-3 text-white" />
+                  </span>
+                  <span>Save & Log to Audit Trail</span>
                 </button>
               </div>
             </form>

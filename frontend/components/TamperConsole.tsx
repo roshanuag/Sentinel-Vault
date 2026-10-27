@@ -33,17 +33,17 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
   const isBusy = busy !== null;
 
   return (
-    <div className="relative overflow-hidden rounded-[6px] border border-[#BA4A38]/35 bg-[#FCFAF7] p-5 sm:p-6 shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-[#BA4A38]/35 liquid-glass-card p-5 sm:p-6 shadow-sm">
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-[#D5CDBD]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-[6px] bg-[#EDE6DA] border border-[#D5CDBD] flex items-center justify-center text-[#BA4A38]">
+          <div className="w-10 h-10 rounded-full liquid-glass-btn flex items-center justify-center text-[#BA4A38]">
             <Skull className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-base font-bold text-[#2A2421] font-serif flex items-center gap-2">
               Attacker Tamper Console
-              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-[6px] bg-[#EDE6DA] text-[#BA4A38] border border-[#BA4A38]/30 font-bold">
+              <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full liquid-glass-pill text-[#BA4A38] font-bold">
                 Simulate Root Breach
               </span>
             </h2>
@@ -53,7 +53,7 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] font-mono text-[#BA4A38] bg-[#EDE6DA] px-3 py-1 rounded-[6px] border border-[#D5CDBD]">
+        <div className="flex items-center gap-2 text-[11px] font-mono text-[#BA4A38] liquid-glass-pill px-3 py-1 rounded-full border border-[#BA4A38]/30">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
           <span>Auto-verifies chain after execution</span>
         </div>
@@ -70,7 +70,7 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
             value={selectedWindow}
             onChange={(e) => setSelectedWindow(Number(e.target.value))}
             disabled={isBusy}
-            className="w-full bg-[#FFFFFF] border border-[#D5CDBD] rounded-[6px] px-3 py-2 text-sm text-[#2A2421] focus:outline-none focus:border-[#BA4A38] transition-colors cursor-pointer shadow-sm"
+            className="w-full css-glassmorphism-textbox rounded-full px-4 py-2 text-sm text-[#2A2421] cursor-pointer shadow-xs"
           >
             {windows.length > 0 ? (
               windows.map((w) => (
@@ -84,7 +84,7 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
           </select>
         </div>
 
-        {/* Action Toggle (Modify vs Delete) styled like Screenshot */}
+        {/* Action Toggle (Modify vs Delete) styled with css-glassmorphism */}
         <div className="font-mono">
           <label className="block text-[11px] text-[#7E756B] uppercase tracking-wider mb-1.5 font-sans font-semibold">
             Attack Vector
@@ -94,13 +94,15 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
               type="button"
               onClick={() => setAction("modify")}
               disabled={isBusy}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-[6px] text-xs font-semibold border transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 action === "modify"
-                  ? "bg-[#A07855] border-[#8D6544] text-white shadow-sm"
-                  : "bg-[#FFFFFF] border-[#D5CDBD] text-[#7E756B] hover:text-[#2A2421]"
+                  ? "liquid-glass-primary shadow-xs"
+                  : "liquid-glass-btn text-[#7E756B] hover:text-[#2A2421]"
               }`}
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <span className={`btn-icon w-5 h-5 ${action === "modify" ? "bg-black/40 text-white" : "text-white"}`}>
+                <Edit3 className="w-3 h-3" />
+              </span>
               <span>Modify Log Line</span>
             </button>
 
@@ -108,26 +110,30 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
               type="button"
               onClick={() => setAction("delete")}
               disabled={isBusy}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-[6px] text-xs font-semibold border transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 action === "delete"
-                  ? "bg-[#BA4A38] border-[#A53E2D] text-white shadow-sm"
-                  : "bg-[#FFFFFF] border-[#D5CDBD] text-[#7E756B] hover:text-[#2A2421]"
+                  ? "liquid-glass-destructive shadow-xs"
+                  : "liquid-glass-btn text-[#7E756B] hover:text-[#2A2421]"
               }`}
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <span className={`btn-icon w-5 h-5 ${action === "delete" ? "bg-black/40 text-white" : "text-white"}`}>
+                <Trash2 className="w-3 h-3" />
+              </span>
               <span>Delete Log Line</span>
             </button>
           </div>
         </div>
 
-        {/* Execute Attack Button (Destructive red) */}
+        {/* Execute Attack Button (Destructive red with liquid glass) */}
         <div className="md:self-end">
           <button
             type="submit"
             disabled={isBusy}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2 rounded-[6px] bg-[#BA4A38] hover:bg-[#A53E2D] text-white font-semibold text-sm transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full md:w-auto flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full liquid-glass-destructive text-white font-semibold text-sm transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
-            <Play className="w-4 h-4 fill-current" />
+            <span className="btn-icon w-6 h-6 bg-black/40 text-white">
+              <Play className="w-3.5 h-3.5 fill-current" />
+            </span>
             <span>{busy === "tamper" ? "Attacking..." : "Execute Attack"}</span>
           </button>
         </div>
@@ -141,12 +147,12 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
             <span>Attack Execution Log — Target: Window {lastTamperResult.window_index}</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-3 rounded-[6px] bg-[#FFFFFF] border border-[#D5CDBD]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 rounded-xl liquid-glass-inner">
             <div>
               <span className="text-[10px] uppercase text-[#7E756B] block mb-1">
                 Before Attack (Anchored):
               </span>
-              <div className="text-[#7E756B] bg-[#FCFAF7] p-2 rounded-[6px] border border-[#D5CDBD] truncate">
+              <div className="text-[#7E756B] liquid-glass-inner p-2.5 rounded-lg truncate">
                 {lastTamperResult.before || "Original forensic log record"}
               </div>
             </div>
@@ -155,7 +161,7 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
               <span className="text-[10px] uppercase text-[#BA4A38] block mb-1 font-bold">
                 After Attack (Manipulated on disk):
               </span>
-              <div className="text-[#BA4A38] bg-[#EDE6DA] p-2 rounded-[6px] border border-[#BA4A38]/30 truncate font-semibold">
+              <div className="text-[#BA4A38] liquid-glass-inner p-2.5 rounded-lg truncate font-semibold">
                 {lastTamperResult.after || "Altered log entry"}
               </div>
             </div>

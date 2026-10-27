@@ -40,14 +40,14 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-[#2A2421]/30 backdrop-blur-sm flex justify-end animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-xl h-full bg-[#FCFAF7] border-l border-[#D5CDBD] shadow-2xl flex flex-col z-10 animate-in slide-in-from-right duration-300"
+        className="relative w-full max-w-xl h-full liquid-glass-card rounded-none border-l border-[#D5CDBD] shadow-2xl flex flex-col z-10 animate-in slide-in-from-right duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header in Playfair Display */}
-        <div className="p-6 border-b border-[#D5CDBD] flex items-center justify-between bg-[#FFFFFF]">
+        <div className="p-6 border-b border-[#D5CDBD] flex items-center justify-between liquid-glass-inner rounded-none">
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-[6px] flex items-center justify-center border"
+              className="w-10 h-10 rounded-full liquid-glass-pill flex items-center justify-center border"
               style={{
                 backgroundColor: theme.bg,
                 borderColor: theme.border,
@@ -62,7 +62,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
                   Window {w.window_index} Deep Forensics
                 </h3>
                 <span
-                  className="text-[11px] font-mono px-2.5 py-0.5 rounded-[6px] font-bold uppercase tracking-wider border"
+                  className="text-[11px] font-mono px-2.5 py-0.5 rounded-full liquid-glass-pill font-bold uppercase tracking-wider border"
                   style={{
                     backgroundColor: theme.bg,
                     borderColor: theme.border,
@@ -83,10 +83,12 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
               playClick();
               onClose();
             }}
-            className="p-2 rounded-[6px] bg-[#EDE6DA] hover:bg-[#D9D3CA] text-[#7E756B] hover:text-[#2A2421] transition-colors cursor-pointer"
+            className="liquid-glass-btn w-9 h-9 p-0 rounded-full flex items-center justify-center text-[#7E756B] hover:text-[#2A2421] transition-all cursor-pointer shadow-xs"
             title="Close Drawer (Esc)"
           >
-            <X className="w-5 h-5" />
+            <span className="btn-icon w-6 h-6 text-white">
+              <X className="w-3.5 h-3.5" />
+            </span>
           </button>
         </div>
 
@@ -94,7 +96,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
         <div className="flex-1 overflow-y-auto p-6 space-y-6 font-mono text-xs">
           {/* Forensic Verdict Alert */}
           {isTampered && (
-            <div className="p-4 rounded-[6px] bg-[#EDE6DA] border border-[#BA4A38]/40 text-[#BA4A38] space-y-1 shadow-sm">
+            <div className="p-4 rounded-xl liquid-glass-inner border border-[#BA4A38]/40 text-[#BA4A38] space-y-1 shadow-sm">
               <div className="flex items-center gap-2 font-bold text-sm">
                 <AlertCircle className="w-4 h-4" />
                 <span>INTEGRITY VIOLATION DETECTED</span>
@@ -113,16 +115,18 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
             </h4>
 
             {/* Anchored Log Hash */}
-            <div className="p-3 rounded-[6px] bg-[#FFFFFF] border border-[#D5CDBD] shadow-sm">
+            <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[#7E756B] text-[11px] font-sans">Anchored Log Hash (Immutable Ledger):</span>
                 {w.anchored_log_hash && (
                   <button
                     onClick={() => handleCopy(w.anchored_log_hash!, "anchored_hash")}
-                    className="flex items-center gap-1 text-[10px] text-[#2E7D5B] hover:underline cursor-pointer"
+                    className="liquid-glass-btn flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] text-[#2E7D5B] transition-all cursor-pointer shadow-xs"
                   >
-                    {copiedKey === "anchored_hash" ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copiedKey === "anchored_hash" ? "Copied" : "Copy"}
+                    <span className="btn-icon w-4 h-4 text-white">
+                      {copiedKey === "anchored_hash" ? <Check className="w-2.5 h-2.5 text-[#2E7D5B]" /> : <Copy className="w-2.5 h-2.5" />}
+                    </span>
+                    <span>{copiedKey === "anchored_hash" ? "Copied" : "Copy"}</span>
                   </button>
                 )}
               </div>
@@ -133,10 +137,10 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
 
             {/* Current Log Hash */}
             <div
-              className={`p-3 rounded-[6px] border shadow-sm ${
+              className={`p-3 rounded-xl liquid-glass-inner border shadow-sm ${
                 isTampered
-                  ? "bg-[#EDE6DA] border-[#BA4A38]/40"
-                  : "bg-[#FFFFFF] border-[#D5CDBD]"
+                  ? "border-[#BA4A38]/40 text-[#BA4A38]"
+                  : "border-[#D5CDBD]"
               }`}
             >
               <div className="flex items-center justify-between mb-1">
@@ -144,12 +148,14 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
                 {w.current_log_hash && (
                   <button
                     onClick={() => handleCopy(w.current_log_hash!, "current_hash")}
-                    className={`flex items-center gap-1 text-[10px] hover:underline cursor-pointer ${
+                    className={`liquid-glass-btn flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] transition-all cursor-pointer shadow-xs ${
                       isTampered ? "text-[#BA4A38]" : "text-[#2E7D5B]"
                     }`}
                   >
-                    {copiedKey === "current_hash" ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copiedKey === "current_hash" ? "Copied" : "Copy"}
+                    <span className="btn-icon w-4 h-4 text-white">
+                      {copiedKey === "current_hash" ? <Check className="w-2.5 h-2.5 text-[#2E7D5B]" /> : <Copy className="w-2.5 h-2.5" />}
+                    </span>
+                    <span>{copiedKey === "current_hash" ? "Copied" : "Copy"}</span>
                   </button>
                 )}
               </div>
@@ -163,7 +169,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
             </div>
 
             {/* Chained Hash */}
-            <div className="p-3 rounded-[6px] bg-[#FFFFFF] border border-[#D5CDBD] shadow-sm">
+            <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[#A07855] text-[11px] flex items-center gap-1 font-sans">
                   <Link2 className="w-3 h-3" />
@@ -172,10 +178,12 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
                 {w.chain_hash && (
                   <button
                     onClick={() => handleCopy(w.chain_hash!, "chain_hash")}
-                    className="flex items-center gap-1 text-[10px] text-[#A07855] hover:underline cursor-pointer"
+                    className="liquid-glass-btn flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] text-[#A07855] transition-all cursor-pointer shadow-xs"
                   >
-                    {copiedKey === "chain_hash" ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copiedKey === "chain_hash" ? "Copied" : "Copy"}
+                    <span className="btn-icon w-4 h-4 text-white">
+                      {copiedKey === "chain_hash" ? <Check className="w-2.5 h-2.5 text-[#A07855]" /> : <Copy className="w-2.5 h-2.5" />}
+                    </span>
+                    <span>{copiedKey === "chain_hash" ? "Copied" : "Copy"}</span>
                   </button>
                 )}
               </div>
@@ -187,7 +195,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
 
           {/* Forensic Metrics Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-[6px] bg-[#FFFFFF] border border-[#D5CDBD] shadow-sm">
+            <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] shadow-sm">
               <span className="text-[10px] text-[#7E756B] uppercase block mb-1 font-sans">
                 Anchored Line Count
               </span>
@@ -196,7 +204,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
               </span>
             </div>
 
-            <div className="p-3 rounded-[6px] bg-[#FFFFFF] border border-[#D5CDBD] shadow-sm">
+            <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] shadow-sm">
               <span className="text-[10px] text-[#7E756B] uppercase block mb-1 font-sans">
                 Current Line Count
               </span>
@@ -221,17 +229,17 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
               Window Log Slices on Disk
             </h4>
 
-            <div className="p-3 rounded-[6px] bg-[#FFFFFF] border border-[#D5CDBD] space-y-1.5 shadow-sm">
+            <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] space-y-1.5 shadow-sm">
               {w.raw_lines && w.raw_lines.length > 0 ? (
                 w.raw_lines.map((line, idx) => {
                   const isModified = w.tampered_line && line === w.tampered_line;
                   return (
                     <div
                       key={idx}
-                      className={`p-2 rounded-[6px] font-mono text-[11px] leading-relaxed ${
+                      className={`p-2 rounded-lg font-mono text-[11px] leading-relaxed transition-colors ${
                         isModified
-                          ? "bg-[#EDE6DA] border border-[#BA4A38]/40 text-[#BA4A38] font-bold"
-                          : "text-[#2A2421] hover:bg-[#FCFAF7]"
+                          ? "bg-[#BA4A38]/15 border border-[#BA4A38]/40 text-[#BA4A38] font-bold"
+                          : "text-[#2A2421] hover:bg-white/40"
                       }`}
                     >
                       <span className="text-[#7E756B] select-none mr-2 font-mono">
@@ -239,7 +247,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
                       </span>
                       {line}
                       {isModified && (
-                        <span className="ml-2 text-[9px] uppercase px-1.5 py-0.2 rounded-[6px] bg-[#BA4A38] text-white font-bold">
+                        <span className="ml-2 text-[9px] uppercase px-1.5 py-0.5 rounded-full liquid-glass-destructive text-white font-bold">
                           TAMPERED
                         </span>
                       )}
@@ -256,7 +264,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[#D5CDBD] bg-[#FFFFFF] flex items-center justify-between">
+        <div className="p-4 border-t border-[#D5CDBD] liquid-glass-inner rounded-none flex items-center justify-between">
           <div className="text-[11px] text-[#7E756B] font-mono flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-[#A07855]" />
             <span>Anchored: {w.anchored_at || "2026-10-27T10:05:01Z"}</span>
@@ -267,9 +275,12 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
               playClick();
               onClose();
             }}
-            className="px-4 py-1.5 rounded-[6px] bg-[#E4DFD7] hover:bg-[#D9D3CA] text-[#2A2421] text-xs font-sans font-semibold border border-[#D5CDBD] cursor-pointer"
+            className="liquid-glass-btn flex items-center gap-2 px-5 py-2 rounded-full text-[#2A2421] text-xs font-sans font-semibold transition-all cursor-pointer shadow-xs"
           >
-            Close
+            <span className="btn-icon w-5 h-5 text-white">
+              <X className="w-3 h-3" />
+            </span>
+            <span>Close</span>
           </button>
         </div>
       </div>

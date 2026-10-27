@@ -43,10 +43,10 @@ export const WindowCard: React.FC<WindowCardProps> = ({
         playClick();
         onSelect(w);
       }}
-      className={`group relative rounded-[6px] border transition-all duration-200 cursor-pointer overflow-hidden ${
+      className={`group relative rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden backdrop-blur-md liquid-glass-card ${
         isSelected
-          ? "bg-[#FCFAF7] ring-2 ring-[#A07855] shadow-md border-[#A07855]"
-          : "bg-[#FFFFFF] border-[#D5CDBD] hover:border-[#A07855] shadow-[0_1px_4px_rgba(42,36,33,0.06)] hover:shadow-md"
+          ? "ring-2 ring-[#A07855] shadow-lg border-[#A07855]"
+          : "hover:border-[#A07855] shadow-[0_2px_12px_rgba(42,36,33,0.06)] hover:shadow-lg"
       }`}
       style={{
         borderLeftColor: theme.color,
@@ -58,7 +58,7 @@ export const WindowCard: React.FC<WindowCardProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           {/* Window Index & Time Range */}
           <div className="flex items-center gap-2.5">
-            <span className="flex items-center justify-center w-7 h-7 rounded-[6px] bg-[#EDE6DA] border border-[#D5CDBD] text-xs font-mono font-bold text-[#A07855]">
+            <span className="flex items-center justify-center w-7 h-7 rounded-full liquid-glass-btn text-xs font-mono font-bold text-[#A07855]">
               #{w.window_index}
             </span>
             <div>
@@ -74,14 +74,14 @@ export const WindowCard: React.FC<WindowCardProps> = ({
           {/* Status Badge */}
           <div className="flex items-center gap-2">
             <span
-              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[6px] text-[11px] font-mono font-bold uppercase tracking-wider border ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider liquid-glass-pill ${
                 isTampered
-                  ? "bg-[#BA4A38]/10 text-[#BA4A38] border-[#BA4A38]/40 shadow-sm"
+                  ? "text-[#BA4A38] border border-[#BA4A38]/40 shadow-sm"
                   : isIntact
-                  ? "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/30"
+                  ? "text-[#2E7D5B] border border-[#2E7D5B]/30"
                   : isMissing
-                  ? "bg-[#857E76]/10 text-[#857E76] border-[#857E76]/30"
-                  : "bg-[#B87720]/10 text-[#B87720] border-[#B87720]/30"
+                  ? "text-[#857E76] border border-[#857E76]/30"
+                  : "text-[#B87720] border border-[#B87720]/30"
               }`}
             >
               {isTampered ? (
@@ -99,7 +99,7 @@ export const WindowCard: React.FC<WindowCardProps> = ({
         {/* Forensic Hashes Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 my-3 text-xs font-mono">
           {/* Chained Hash (mini blockchain) */}
-          <div className="p-2.5 rounded-[6px] bg-[#FCFAF7] border border-[#D5CDBD] flex items-center justify-between">
+          <div className="p-3 rounded-xl liquid-glass-inner flex items-center justify-between">
             <div className="overflow-hidden pr-2">
               <span className="text-[10px] text-[#7E756B] uppercase tracking-wider block flex items-center gap-1 font-sans">
                 <Hash className="w-3 h-3 text-[#A07855]" />
@@ -112,20 +112,22 @@ export const WindowCard: React.FC<WindowCardProps> = ({
             {w.chain_hash && (
               <button
                 onClick={(e) => handleCopy(e, w.chain_hash!, "chain")}
-                className="p-1 rounded-[6px] bg-[#EDE6DA] hover:bg-[#D9D3CA] text-[#7E756B] hover:text-[#2A2421] transition-colors cursor-pointer"
+                className="liquid-glass-btn w-7 h-7 p-0 rounded-full flex items-center justify-center text-[#7E756B] hover:text-[#2A2421] transition-all cursor-pointer shadow-xs"
                 title="Copy Full Chained SHA-256 Hash"
               >
-                {copiedHash === "chain" ? (
-                  <Check className="w-3.5 h-3.5 text-[#2E7D5B]" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
+                <span className="btn-icon w-5 h-5 text-white">
+                  {copiedHash === "chain" ? (
+                    <Check className="w-3 h-3 text-[#2E7D5B]" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-white" />
+                  )}
+                </span>
               </button>
             )}
           </div>
 
           {/* Current vs Anchored Log Hash */}
-          <div className="p-2.5 rounded-[6px] bg-[#FCFAF7] border border-[#D5CDBD] flex items-center justify-between">
+          <div className="p-3 rounded-xl liquid-glass-inner flex items-center justify-between">
             <div className="overflow-hidden pr-2">
               <span className="text-[10px] text-[#7E756B] uppercase tracking-wider block flex items-center gap-1 font-sans">
                 <FileText className="w-3 h-3 text-[#A07855]" />
@@ -145,14 +147,16 @@ export const WindowCard: React.FC<WindowCardProps> = ({
                 onClick={(e) =>
                   handleCopy(e, (w.current_log_hash || w.anchored_log_hash)!, "log")
                 }
-                className="p-1 rounded-[6px] bg-[#EDE6DA] hover:bg-[#D9D3CA] text-[#7E756B] hover:text-[#2A2421] transition-colors cursor-pointer"
+                className="liquid-glass-btn w-7 h-7 p-0 rounded-full flex items-center justify-center text-[#7E756B] hover:text-[#2A2421] transition-all cursor-pointer shadow-xs"
                 title="Copy Full Log SHA-256 Hash"
               >
-                {copiedHash === "log" ? (
-                  <Check className="w-3.5 h-3.5 text-[#2E7D5B]" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
+                <span className="btn-icon w-5 h-5 text-white">
+                  {copiedHash === "log" ? (
+                    <Check className="w-3 h-3 text-[#2E7D5B]" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-white" />
+                  )}
+                </span>
               </button>
             )}
           </div>
@@ -186,7 +190,7 @@ export const WindowCard: React.FC<WindowCardProps> = ({
 
         {/* Forensic reason summary if tampered */}
         {isTampered && w.detail && (
-          <div className="mt-2.5 p-2 rounded-[6px] bg-[#EDE6DA] border border-[#BA4A38]/30 text-xs font-mono text-[#BA4A38] font-semibold">
+          <div className="mt-3 p-3 rounded-xl liquid-glass-inner border border-[#BA4A38]/30 text-xs font-mono text-[#BA4A38] font-semibold">
             {w.detail}
           </div>
         )}

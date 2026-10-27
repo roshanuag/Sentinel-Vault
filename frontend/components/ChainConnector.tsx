@@ -26,10 +26,10 @@ export const ChainConnector: React.FC<ChainConnectorProps> = ({
 
       {/* Center Cryptographic Link Badge */}
       <div
-        className={`relative z-10 flex items-center gap-2 px-3 py-1 rounded-[6px] text-[10px] font-mono border backdrop-blur-md transition-all shadow-sm ${
+        className={`relative z-10 flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-mono border backdrop-blur-md transition-all shadow-xs ${
           isBroken
-            ? "bg-[#EDE6DA] border-[#BA4A38] text-[#BA4A38] shadow-sm font-bold"
-            : "bg-[#FFFFFF] border-[#D5CDBD] text-[#A07855] font-semibold"
+            ? "liquid-glass-pill border-[#BA4A38] text-[#BA4A38] shadow-xs font-bold"
+            : "liquid-glass-pill text-[#A07855] font-semibold"
         }`}
       >
         <Link className={`w-3 h-3 ${isBroken ? "text-[#BA4A38]" : "text-[#A07855]"}`} />

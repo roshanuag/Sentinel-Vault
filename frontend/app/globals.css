@@ -82,74 +82,844 @@ h1, h2, h3, h4, .font-heading {
 
 /* Vintage Paper Card Panels */
 .vintage-card {
-  background: #FFFFFF;
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px double rgba(51, 51, 51, 0.1);
   border-radius: var(--radius);
   box-shadow: 0 1px 3px rgba(42, 36, 33, 0.05), 0 4px 16px rgba(42, 36, 33, 0.03);
 }
 
 .vintage-card-warm {
-  background: #FCFAF7;
-  border: 1px solid var(--border);
+  background: rgba(252, 250, 247, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px double rgba(51, 51, 51, 0.1);
   border-radius: var(--radius);
   box-shadow: 0 1px 3px rgba(42, 36, 33, 0.05), 0 6px 20px rgba(42, 36, 33, 0.04);
 }
 
 .vintage-card-elevated {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px double rgba(51, 51, 51, 0.12);
   border-radius: var(--radius);
   box-shadow: 0 4px 20px rgba(42, 36, 33, 0.08);
 }
 
-/* Vintage Buttons matching Screenshot */
-.btn-vintage-primary {
-  background-color: var(--primary);
-  color: #FFFFFF;
-  border-radius: var(--radius);
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-.btn-vintage-primary:hover {
-  background-color: var(--primary-hover);
-  box-shadow: 0 2px 8px rgba(160, 120, 85, 0.35);
+/* ==========================================================================
+   CSS GLASSMORPHISM DESIGN SYSTEM
+   Buttons & Text Box Backgrounds (Matching Get Started Button Exactly)
+   ========================================================================== */
+
+/* Universal Liquid Glass Buttons matching Get Started button */
+.liquid-glass-btn,
+.css-glassmorphism-btn,
+button.btn-glassmorphism,
+.btn-vintage-outline,
+.btn-vintage-secondary,
+.sh-navcta,
+.sh-theme {
+  --r: 9999px;
+  --tr: 20%;
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--r) !important;
+  border: 1px double rgba(51, 51, 51, 0.08) !important;
+
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255, 255, 255, 0.9),
+    inset -2px 2px 1px -1px rgba(255, 255, 255, 0.9),
+    inset 6px -6px 1px -6px rgba(255, 255, 255, 0.55),
+    inset -6px 6px 1px -6px rgba(255, 255, 255, 0.55),
+    inset 0 0 2px rgba(0, 0, 0, 0.8),
+    0 4px 8px rgba(0, 0, 0, 0.2) !important;
+
+  background: rgba(0, 0, 0, 0.02) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  cursor: pointer;
+  filter: brightness(0.92);
+  user-select: none;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  text-decoration: none;
 }
 
-.btn-vintage-secondary {
-  background-color: var(--secondary);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+/* Layer 1: Dark refraction ring behind */
+.liquid-glass-btn:before,
+.css-glassmorphism-btn:before,
+button.btn-glassmorphism:before,
+.btn-vintage-outline:before,
+.btn-vintage-secondary:before,
+.sh-navcta:before,
+.sh-theme:before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+/* Layer 2: Diagonal liquid specular reflection glare */
+.liquid-glass-btn:after,
+.css-glassmorphism-btn:after,
+button.btn-glassmorphism:after,
+.btn-vintage-outline:after,
+.btn-vintage-secondary:after,
+.sh-navcta:after,
+.sh-theme:after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  filter: blur(7px);
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    transparent var(--tr, 20%),
+    transparent calc(100% - var(--tr, 20%)),
+    rgba(255, 255, 255, 0.8) 100%
+  );
+  pointer-events: none;
+}
+
+/* Text and icons sit crisply above reflections */
+.liquid-glass-btn > *,
+.css-glassmorphism-btn > *,
+button.btn-glassmorphism > *,
+.sh-navcta > *,
+.sh-theme > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* Hover and active states matching Get Started button */
+.liquid-glass-btn:hover,
+.css-glassmorphism-btn:hover,
+button.btn-glassmorphism:hover,
+.btn-vintage-outline:hover,
+.btn-vintage-secondary:hover,
+.sh-navcta:hover,
+.sh-theme:hover {
+  background: rgba(0, 0, 0, 0) !important;
+  transform: translateY(-3px) !important;
+  filter: brightness(1) !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255, 255, 255, 1),
+    inset -2px 2px 1px -1px rgba(255, 255, 255, 1),
+    inset 6px -6px 1px -6px rgba(255, 255, 255, 0.7),
+    inset -6px 6px 1px -6px rgba(255, 255, 255, 0.7),
+    inset 0 0 2px rgba(0, 0, 0, 0.9),
+    0 6px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+.liquid-glass-btn:active,
+.css-glassmorphism-btn:active,
+button.btn-glassmorphism:active,
+.btn-vintage-outline:active,
+.btn-vintage-secondary:active,
+.sh-navcta:active,
+.sh-theme:active {
+  transform: scale(0.94) !important;
+}
+
+/* Primary Liquid Glass Button (Warm Caramel / Leather Tint) */
+.liquid-glass-primary,
+.btn-vintage-primary,
+.css-glassmorphism-primary {
+  --r: 9999px;
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--r) !important;
+  border: 1px double rgba(255, 255, 255, 0.35) !important;
+  background: linear-gradient(135deg, rgba(160, 120, 85, 0.92) 0%, rgba(141, 101, 68, 0.98) 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255, 255, 255, 0.85),
+    inset -2px 2px 1px -1px rgba(255, 255, 255, 0.85),
+    inset 6px -6px 1px -6px rgba(255, 255, 255, 0.55),
+    inset -6px 6px 1px -6px rgba(255, 255, 255, 0.55),
+    inset 0 0 2px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(160, 120, 85, 0.35) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.liquid-glass-primary:before,
+.btn-vintage-primary:before,
+.css-glassmorphism-primary:before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  filter: blur(7px);
+  pointer-events: none;
+}
+
+.liquid-glass-primary:after,
+.btn-vintage-primary:after,
+.css-glassmorphism-primary:after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: 9999px;
+  filter: blur(6px);
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.75) 0%,
+    transparent 20%,
+    transparent 80%,
+    rgba(255, 255, 255, 0.75) 100%
+  );
+  pointer-events: none;
+}
+
+.liquid-glass-primary:hover,
+.btn-vintage-primary:hover,
+.css-glassmorphism-primary:hover {
+  transform: translateY(-3px) !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255, 255, 255, 1),
+    inset -2px 2px 1px -1px rgba(255, 255, 255, 1),
+    0 6px 18px rgba(160, 120, 85, 0.45) !important;
+}
+
+.liquid-glass-primary:active,
+.btn-vintage-primary:active,
+.css-glassmorphism-primary:active {
+  transform: scale(0.94) !important;
+}
+
+/* Destructive Liquid Glass Button (Terracotta / Crimson Tint) */
+.liquid-glass-destructive,
+.btn-vintage-destructive,
+.css-glassmorphism-destructive {
+  --r: 9999px;
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--r) !important;
+  border: 1px double rgba(255, 255, 255, 0.35) !important;
+  background: linear-gradient(135deg, rgba(186, 74, 56, 0.92) 0%, rgba(165, 62, 45, 0.98) 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255, 255, 255, 0.85),
+    inset -2px 2px 1px -1px rgba(255, 255, 255, 0.85),
+    inset 6px -6px 1px -6px rgba(255, 255, 255, 0.55),
+    inset -6px 6px 1px -6px rgba(255, 255, 255, 0.55),
+    inset 0 0 2px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(186, 74, 56, 0.35) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.liquid-glass-destructive:before,
+.btn-vintage-destructive:before,
+.css-glassmorphism-destructive:before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  filter: blur(7px);
+  pointer-events: none;
+}
+
+.liquid-glass-destructive:after,
+.btn-vintage-destructive:after,
+.css-glassmorphism-destructive:after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: 9999px;
+  filter: blur(6px);
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.75) 0%,
+    transparent 20%,
+    transparent 80%,
+    rgba(255, 255, 255, 0.75) 100%
+  );
+  pointer-events: none;
+}
+
+.liquid-glass-destructive:hover,
+.btn-vintage-destructive:hover,
+.css-glassmorphism-destructive:hover {
+  transform: translateY(-3px) !important;
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255, 255, 255, 1),
+    inset -2px 2px 1px -1px rgba(255, 255, 255, 1),
+    0 6px 18px rgba(186, 74, 56, 0.45) !important;
+}
+
+.liquid-glass-destructive:active,
+.btn-vintage-destructive:active,
+.css-glassmorphism-destructive:active {
+  transform: scale(0.94) !important;
+}
+
+/* Circular dark icon badge inside buttons matching Get Started button */
+.liquid-glass-btn .btn-icon,
+.css-glassmorphism-btn .btn-icon,
+.liquid-glass-primary .btn-icon,
+.liquid-glass-destructive .btn-icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background: #3e3e3e;
+  color: #f5f5f5;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+  transition: 0.25s;
+  flex-shrink: 0;
+}
+
+.liquid-glass-btn:hover .btn-icon,
+.css-glassmorphism-btn:hover .btn-icon,
+.liquid-glass-primary:hover .btn-icon,
+.liquid-glass-destructive:hover .btn-icon {
+  transform: scale(1.1);
+}
+
+.liquid-glass-btn:active .btn-icon,
+.css-glassmorphism-btn:active .btn-icon,
+.liquid-glass-primary:active .btn-icon,
+.liquid-glass-destructive:active .btn-icon {
+  transform: scale(0.94);
+}
+
+/* ==========================================================================
+   LIQUID GLASSMORPHISM BOXES, PILLS, & TEXTBOXES
+   Matching the "Get Started" liquid glass aesthetic across all site elements
+   ========================================================================== */
+
+/* Universal Light Glassmorphism for Text Boxes & Inputs (Professional, Luminous & Clean) */
+.css-glassmorphism-textbox,
+input[type="text"],
+input[type="search"],
+input[type="password"],
+input[type="email"],
+select,
+textarea {
+  position: relative;
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  border: 1px solid rgba(213, 205, 189, 0.7) !important;
+  border-radius: 9999px;
+  box-shadow:
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.03),
+    0 1px 3px 0 rgba(42, 36, 33, 0.04) !important;
+  color: #2A2421 !important;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.css-glassmorphism-textbox:hover,
+input[type="text"]:hover,
+input[type="search"]:hover,
+input[type="password"]:hover,
+input[type="email"]:hover,
+select:hover,
+textarea:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(160, 120, 85, 0.4) !important;
+  box-shadow:
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02),
+    0 3px 8px -1px rgba(42, 36, 33, 0.06) !important;
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+select:focus,
+textarea:focus {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(160, 120, 85, 0.6) !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+    0 0 0 3px rgba(160, 120, 85, 0.16),
+    0 4px 12px -2px rgba(160, 120, 85, 0.12) !important;
+  outline: none !important;
+}
+
+textarea.css-glassmorphism-textbox,
+textarea {
+  border-radius: 14px !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(126, 117, 107, 0.65) !important;
+  font-weight: 400;
+}
+
+/* Light Glassmorphism Floating Header (TopBar) */
+.light-glass-header,
+.box-yellow-style,
+.bloom-blush-header {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(250, 247, 242, 0.72) 100%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(213, 205, 189, 0.75) !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
+    0 8px 30px -4px rgba(42, 36, 33, 0.06) !important;
+}
+
+/* Green Box Style: Light Cream & Whitish Frosted Glass (Left Hero Status) */
+.box-green-style,
+.bloom-cream-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(250, 247, 242, 0.72) 100%) !important;
+  backdrop-filter: blur(18px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
+  border: 1px solid rgba(213, 205, 189, 0.75) !important;
+  border-radius: 28px !important;
+  box-shadow:
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
+    0 10px 30px -6px rgba(42, 36, 33, 0.06) !important;
+  overflow: hidden;
+  color: #2A2421;
+}
+
+/* Blue Box Style: Light Cream & Whitish Frosted Glass (Right Forensic Chips) */
+.box-blue-style {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(250, 247, 242, 0.72) 100%) !important;
+  backdrop-filter: blur(18px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
+  border: 1px solid rgba(213, 205, 189, 0.75) !important;
+  border-radius: 28px !important;
+  box-shadow:
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
+    0 10px 30px -6px rgba(42, 36, 33, 0.06) !important;
+  overflow: hidden;
+  color: #2A2421;
+}
+
+/* 1. Light Glass Pills (Badges, Status Chips, Clocks, Indicators) */
+.light-glass-pill,
+.liquid-glass-pill,
+.css-glassmorphism-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02),
+    0 2px 6px rgba(42, 36, 33, 0.03) !important;
+  overflow: hidden;
+}
+
+.light-glass-pill:before,
+.liquid-glass-pill:before,
+.css-glassmorphism-pill:before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.light-glass-pill:after,
+.liquid-glass-pill:after,
+.css-glassmorphism-pill:after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  filter: blur(4px);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.1) 30%,
+    transparent 60%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  pointer-events: none;
+}
+
+.light-glass-pill > *,
+.liquid-glass-pill > *,
+.css-glassmorphism-pill > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* 2. Light Glass Cards & Containers (Hero Card, Attacker Console, Admin Table, QuickStats) */
+.light-glass-card,
+.liquid-glass-card,
+.liquid-glass-box,
+.css-glassmorphism-card {
+  position: relative;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.42) !important;
+  backdrop-filter: blur(18px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
+  box-shadow:
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02),
+    0 4px 20px -2px rgba(42, 36, 33, 0.05) !important;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.light-glass-card:before,
+.liquid-glass-card:before,
+.liquid-glass-box:before,
+.css-glassmorphism-card:before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.light-glass-card:after,
+.liquid-glass-card:after,
+.liquid-glass-box:after,
+.css-glassmorphism-card:after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  filter: blur(4px);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.08) 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 85%,
+    rgba(255, 255, 255, 0.35) 100%
+  );
+  pointer-events: none;
+}
+
+.light-glass-card > *:not(.pointer-events-none):not([class*="absolute"]),
+.liquid-glass-card > *:not(.pointer-events-none):not([class*="absolute"]),
+.liquid-glass-box > *:not(.pointer-events-none):not([class*="absolute"]),
+.css-glassmorphism-card > *:not(.pointer-events-none):not([class*="absolute"]) {
+  position: relative;
+  z-index: 3;
+}
+
+/* 3. Inner Liquid Glass Panes (Hash Displays, Diff Panes, Raw Logs) */
+.liquid-glass-inner {
+  position: relative;
+  border-radius: 12px !important;
+  border: 1px double rgba(51, 51, 51, 0.08) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow:
+    inset 1.5px -1.5px 1px -0.5px rgba(255, 255, 255, 0.95),
+    inset -1.5px 1.5px 1px -0.5px rgba(255, 255, 255, 0.95),
+    inset 0 0 2px rgba(0, 0, 0, 0.04),
+    0 2px 6px rgba(42, 36, 33, 0.03) !important;
+  overflow: hidden;
+}
+
+.liquid-glass-inner:before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.liquid-glass-inner:after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  filter: blur(5px);
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    transparent 20%,
+    transparent 80%,
+    rgba(255, 255, 255, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+.liquid-glass-inner > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* ==========================================================================
+   INTEGRATED LIQUID GLASS START BUTTON COMPONENT
+   ========================================================================== */
+.glass-btn-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.glass-btn-container .container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.glass-btn-container .container .top {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.glass-btn-container .container .bottom {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.fx-layer {
+  filter: contrast(3);
+}
+
+/* General button box */
+.box {
+  --w: 100px;
+  --h: 100px;
+  --r: 9999px;
+  --tr: 25%;
+  z-index: 50;
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--r);
+  border: 1px double rgba(51, 51, 51, 0.08);
+
+  box-shadow:
+    inset 2px -2px 1px -1px rgba(255, 255, 255, 0.9),
+    inset -2px 2px 1px -1px rgba(255, 255, 255, 0.9),
+    inset 6px -6px 1px -6px rgba(255, 255, 255, 0.55),
+    inset -6px 6px 1px -6px rgba(255, 255, 255, 0.55),
+    inset 0 0 2px rgba(0, 0, 0, 0.8),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+
+  background: rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  cursor: pointer;
+  filter: brightness(0.9);
+  user-select: none;
+}
+
+.box .svg {
+  width: 28px;
+  filter: drop-shadow(0 25px 3px rgba(102, 102, 102, 0.2));
+}
+
+.box .text {
+  filter: drop-shadow(0 25px 3px rgba(102, 102, 102, 0.15));
+}
+
+.box:before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--w) - 16px);
+  height: calc(var(--h) - 16px);
+  border-radius: var(--r);
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.box:after {
+  z-index: 51;
+  content: "";
+  position: absolute;
+  width: var(--w);
+  height: var(--h);
+  border-radius: var(--r);
+  filter: blur(7px);
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    transparent var(--tr),
+    transparent calc(100% - var(--tr)),
+    rgba(255, 255, 255, 0.8) 100%
+  );
+  pointer-events: none;
+}
+
+.box .circle-overlay {
+  position: absolute;
+  width: calc(var(--w) - 9px);
+  height: calc(var(--h) - 9px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--r);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.start-btn {
+  padding: 0 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  transition: 0.25s;
+  text-decoration: none;
+}
+
+.start-btn .text {
+  font-size: 25px;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #3e3e3e;
   font-weight: 500;
-  transition: all 0.2s ease;
-}
-.btn-vintage-secondary:hover {
-  background-color: var(--secondary-hover);
+  letter-spacing: -0.02em;
 }
 
-.btn-vintage-outline {
-  background-color: #FFFFFF;
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-.btn-vintage-outline:hover {
-  background-color: var(--muted-bg);
+.start-btn .btn-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #3e3e3e;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+  transition: 0.25s;
+  flex-shrink: 0;
 }
 
-.btn-vintage-destructive {
-  background-color: var(--destructive);
-  color: #FFFFFF;
-  border-radius: var(--radius);
-  font-weight: 600;
-  transition: all 0.2s ease;
+.start-btn .btn-icon .svg {
+  width: 16px;
+  height: 16px;
+  fill: #f5f5f5;
 }
-.btn-vintage-destructive:hover {
-  background-color: var(--destructive-hover);
-  box-shadow: 0 2px 8px rgba(186, 74, 56, 0.35);
+
+.start-btn:hover {
+  background: rgba(0, 0, 0, 0);
+  transform: translateY(-3px);
+}
+
+.start-btn:hover .btn-icon {
+  transform: scale(1.1);
+}
+
+.start-btn:active {
+  transform: scale(0.94);
+}
+
+.start-btn:active .text {
+  color: #000;
+}
+
+.start-btn:active .btn-icon {
+  transform: scale(0.94);
+}
+
+/* Fully responsive mobile rules for the Start Button */
+@media (max-width: 640px) {
+  .box.start-btn {
+    --w: min(240px, calc(100vw - 32px)) !important;
+    --h: 60px !important;
+    --tr: 18% !important;
+    gap: 0.75rem !important;
+    padding: 0 0.9rem !important;
+  }
+  .start-btn .text {
+    font-size: 19px !important;
+  }
+  .start-btn .btn-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .start-btn .btn-icon .svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
 }
 
 /* Custom Scrollbar for Vintage Paper */

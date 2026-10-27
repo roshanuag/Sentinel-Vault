@@ -20,23 +20,25 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 font-mono">
       {/* Total 5-Min Windows */}
-      <div className="bg-[#FFFFFF] p-4 rounded-[6px] border border-[#D5CDBD] shadow-sm flex items-center justify-between">
+      <div className="liquid-glass-card p-4 sm:p-5 rounded-2xl shadow-xs flex items-center justify-between">
         <div>
-          <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans">
+          <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans font-semibold">
             Chained Windows
           </span>
           <span className="text-2xl font-bold text-[#2A2421] font-serif">{totalWindows}</span>
           <span className="text-xs text-[#7E756B] block mt-0.5">5-min deterministic slices</span>
         </div>
-        <div className="w-10 h-10 rounded-[6px] bg-[#EDE6DA] border border-[#D5CDBD] flex items-center justify-center text-[#A07855]">
-          <Clock className="w-5 h-5" />
+        <div className="w-11 h-11 rounded-full liquid-glass-btn flex items-center justify-center text-[#A07855]">
+          <span className="btn-icon w-8 h-8 text-white">
+            <Clock className="w-4 h-4 text-[#A07855]" />
+          </span>
         </div>
       </div>
 
       {/* Cryptographic Chain Tip */}
-      <div className="bg-[#FFFFFF] p-4 rounded-[6px] border border-[#D5CDBD] shadow-sm flex items-center justify-between">
+      <div className="liquid-glass-card p-4 sm:p-5 rounded-2xl shadow-xs flex items-center justify-between">
         <div className="overflow-hidden pr-2">
-          <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans">
+          <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans font-semibold">
             Chain Tip Hash
           </span>
           <span className="text-sm font-semibold text-[#A07855] block truncate" title={chainTip || "No tip"}>
@@ -44,15 +46,17 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
           </span>
           <span className="text-xs text-[#7E756B] block mt-0.5">SHA-256 mini-blockchain</span>
         </div>
-        <div className="w-10 h-10 shrink-0 rounded-[6px] bg-[#EDE6DA] border border-[#D5CDBD] flex items-center justify-center text-[#A07855]">
-          <Link2 className="w-5 h-5" />
+        <div className="w-11 h-11 shrink-0 rounded-full liquid-glass-btn flex items-center justify-center text-[#A07855]">
+          <span className="btn-icon w-8 h-8 text-white">
+            <Link2 className="w-4 h-4 text-[#A07855]" />
+          </span>
         </div>
       </div>
 
       {/* First Breakpoint */}
-      <div className="bg-[#FFFFFF] p-4 rounded-[6px] border border-[#D5CDBD] shadow-sm flex items-center justify-between">
+      <div className="liquid-glass-card p-4 sm:p-5 rounded-2xl shadow-xs flex items-center justify-between">
         <div className="overflow-hidden pr-2">
-          <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans">
+          <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans font-semibold">
             First Breakpoint
           </span>
           {firstBreak ? (
@@ -74,20 +78,24 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
           )}
         </div>
         <div
-          className={`w-10 h-10 shrink-0 rounded-[6px] border flex items-center justify-center ${
-            firstBreak
-              ? "bg-[#BA4A38]/10 border-[#BA4A38] text-[#BA4A38]"
-              : "bg-[#2E7D5B]/10 border-[#2E7D5B]/30 text-[#2E7D5B]"
+          className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center ${
+            firstBreak ? "liquid-glass-destructive" : "liquid-glass-btn"
           }`}
         >
-          {firstBreak ? <AlertOctagon className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+          <span className="btn-icon w-8 h-8 text-white">
+            {firstBreak ? (
+              <AlertOctagon className="w-4 h-4 text-white" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-[#2E7D5B]" />
+            )}
+          </span>
         </div>
       </div>
 
       {/* Ledger Security Model */}
-      <div className="bg-[#FFFFFF] p-4 rounded-[6px] border border-[#D5CDBD] shadow-sm flex items-center justify-between">
+      <div className="liquid-glass-card p-4 sm:p-5 rounded-2xl shadow-xs flex items-center justify-between">
         <div>
-          <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans">
+          <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans font-semibold">
             Ledger Backend
           </span>
           <span className="text-sm font-bold text-[#2A2421] block font-serif">
@@ -97,8 +105,10 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
             {mock ? `Local ${ledgerType} · Triggers Blocked` : "On-chain Merkle Root"}
           </span>
         </div>
-        <div className="w-10 h-10 rounded-[6px] bg-[#EDE6DA] border border-[#D5CDBD] flex items-center justify-center text-[#A07855]">
-          <span className="text-xs font-bold font-mono">{mock ? "SQL" : "EVM"}</span>
+        <div className="w-11 h-11 rounded-full liquid-glass-btn flex items-center justify-center text-[#A07855]">
+          <span className="btn-icon w-8 h-8 text-white">
+            <span className="text-xs font-bold font-mono text-[#A07855]">{mock ? "SQL" : "EVM"}</span>
+          </span>
         </div>
       </div>
     </div>

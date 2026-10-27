@@ -73,6 +73,7 @@ export interface TamperResponse {
 }
 
 const API_BASE = (import.meta as unknown as { env?: { VITE_API_BASE?: string } })?.env?.VITE_API_BASE || "http://localhost:8000";
+const API_KEY = (import.meta as unknown as { env?: { VITE_API_KEY?: string } })?.env?.VITE_API_KEY || "demo-key-123";
 
 // --- CLIENT-SIDE CRYPTOGRAPHIC SIMULATOR (for offline / instant demo) ---
 
@@ -401,7 +402,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/api/anchor`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -427,7 +428,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/api/verify`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -447,7 +448,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/api/tamper-demo`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
         body: JSON.stringify({ window_index: windowIndex, action }),
         signal: AbortSignal.timeout(4000),
       });
@@ -468,7 +469,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/api/reset-demo`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {

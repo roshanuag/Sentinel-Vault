@@ -109,3 +109,38 @@ def test_ledger_self_check_detects_corrupted_record(sample_log, db_path):
     assert by_index[0]["status"] == "INTACT"  # log file itself is unchanged
     assert result["overall_status"] == "COMPROMISED"
     assert result["summary"]["ledger_tampered"] == 1
+
+
+def test_link_check_catches_a_rechained_row(sample_log, db_path):
+    import sqlite3
+
+    anchor = _anchored(sample_log, db_path)
+
+    # Attacker edits window 1 in the log AND rewrites its ledger row to match,
+    # recomputing THAT row's own chain_hash so the per-row self-check passes and
+    # the window even looks INTACT. The one thing they didn't do is re-chain the
+    # following rows.
+    tamper.tamper_line(sample_log, 1, "modify", 300)
+    recomputed = build_chain(collect_windows(sample_log, 300), 300)
+    new = recomputed[1]  # window 1's new log_hash + chain_hash (prev_hash unchanged)
+
+    conn = sqlite3.connect(db_path)
+    conn.executescript(
+        "DROP TRIGGER IF EXISTS anchored_windows_no_update;"
+        "DROP TRIGGER IF EXISTS anchored_windows_no_delete;"
+    )
+    conn.execute(
+        "UPDATE anchored_windows SET log_hash = ?, chain_hash = ? WHERE window_index = 1",
+        (new["log_hash"], new["chain_hash"]),
+    )
+    conn.commit()
+    conn.close()
+
+    result = verifier.verify(sample_log, anchor, 300)
+    by_index = {w["index"]: w for w in result["windows"]}
+    # Row 1 passes the per-row check and matches the (tampered) log -> looks INTACT.
+    assert by_index[1]["status"] == "INTACT"
+    # But the broken link into row 2 still catches the tampering.
+    assert by_index[2]["status"] == "LEDGER_TAMPERED"
+    assert result["overall_status"] == "COMPROMISED"
+    assert result["summary"]["ledger_tampered"] == 1

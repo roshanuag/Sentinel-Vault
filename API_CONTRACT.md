@@ -17,7 +17,7 @@ Common fields:
 - A **window** is a fixed time slice of logs (default 5 minutes).
 - `window_id` is the window's start time in ISO format (e.g. `"2026-10-27T10:00:00"`) and is the stable identifier.
 - A **hash** is a 64-character SHA-256 hex string.
-- Per-window `status` is one of: `INTACT`, `TAMPERED`, `MISSING`, `UNANCHORED`, `LEDGER_TAMPERED` (the anchored record itself was altered — its stored chain hash no longer matches its stored fields).
+- Per-window `status` is one of: `INTACT`, `TAMPERED`, `MISSING`, `UNANCHORED`, `LEDGER_TAMPERED` (the anchored record itself was altered — either its stored chain hash no longer matches its own fields, or the chain link to the previous window is broken).
 
 ---
 

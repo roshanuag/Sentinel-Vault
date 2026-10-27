@@ -19,7 +19,7 @@ timestamp an investigator should look at.
 import hashlib
 from datetime import datetime, timezone
 
-from collector import collect_windows, build_chain, DEFAULT_WINDOW_SECONDS
+from collector import collect_windows, build_chain, DEFAULT_WINDOW_SECONDS, GENESIS_PREV
 import ledger
 
 
@@ -61,25 +61,34 @@ def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
                "unanchored": 0, "ledger_tampered": 0}
     result_windows = []
     first_break = None
+    prev_chain = GENESIS_PREV  # row 0 must link back to the genesis (all zeros)
 
     # Walk the anchored windows (the source of truth) in time order.
     for a in anchored:
         window_id = a["window_id"]
         cur = current_by_id.get(window_id)
 
-        # Ledger self-check: the stored record must be internally consistent
-        # (its chain_hash must equal SHA-256(prev_hash | start_time | log_hash)).
-        # If not, the anchored record itself was altered, so we can't trust it.
+        # Ledger self-check, two parts:
+        #  (1) internal: chain_hash == SHA-256(prev_hash | start_time | log_hash)
+        #  (2) link:     prev_hash == the previous row's chain_hash (genesis for row 0)
+        # (2) catches an attacker who edits a row AND recomputes its own chain_hash:
+        # the next row's prev_hash no longer matches, so the chain breaks there.
         expected_chain = hashlib.sha256(
             f"{a['prev_hash']}|{a['start_time']}|{a['log_hash']}".encode("utf-8")
         ).hexdigest()
+        internal_ok = a["chain_hash"] == expected_chain
+        link_ok = a["prev_hash"] == prev_chain
 
-        if a["chain_hash"] != expected_chain:
+        if not internal_ok or not link_ok:
             status = "LEDGER_TAMPERED"
             current_hash = cur["log_hash"] if cur else None
             current_lines = cur["line_count"] if cur else None
-            detail = ("The anchored record itself is inconsistent - this window's "
-                      "stored fingerprint was altered in the ledger.")
+            if not internal_ok:
+                detail = ("The anchored record itself is inconsistent - this window's "
+                          "stored fingerprint was altered in the ledger.")
+            else:
+                detail = ("The ledger chain is broken here - this record's prev_hash "
+                          "does not match the previous window's chain hash.")
         elif cur is None:
             status = "MISSING"
             current_hash = None
@@ -128,6 +137,9 @@ def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
                 "status": status,
                 "detail": detail,
             }
+
+        # Advance the chain pointer to THIS row's stored chain hash for the next row.
+        prev_chain = a["chain_hash"]
 
     # Windows that exist now but were never anchored (informational, not a break).
     for r in records:

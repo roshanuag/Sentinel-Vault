@@ -11,7 +11,7 @@ the frontend teammate; it integrates over the HTTP API (see `API_CONTRACT.md` an
 
 **Backend is feature-complete, hardened, and tested.** Pipeline: collector →
 chained SHA-256 hashing → append-only SQLite ledger **or** on-chain EVM anchor →
-verifier (+ SOC alerts) → hardened FastAPI. 18 passing tests; CI green.
+verifier (+ SOC alerts) → hardened FastAPI. 21 passing tests; CI green.
 
 ## What works (real, not mock)
 
@@ -20,14 +20,15 @@ verifier (+ SOC alerts) → hardened FastAPI. 18 passing tests; CI green.
 - **Anchor adapter** (`src/anchors.py`): one interface, two interchangeable backends — `LocalAnchor` (SQLite append-only, `mock: true`) and `EvmAnchor` (real EVM smart contract, `mock: false`). Chosen by `LEDGER_BACKEND`. `verify` works identically on either.
 - **Smart contract** (`contracts/LogVault.sol`, compiled to `LogVault.json`): `anchorWindow(windowId, chainHash, timestamp)` — append-only on-chain (a window id can't be overwritten), emits `WindowAnchored`, with read-back getters.
 - **Graceful fallback**: if `LEDGER_BACKEND=testnet` but web3/RPC/key is missing or the node is unreachable, the system logs a warning and falls back to the local ledger — no crash.
-- **Verification engine** (`src/verifier.py`): re-reads the log, re-fingerprints it, reports each window as INTACT / TAMPERED / MISSING / UNANCHORED, pinpoints the first broken window, and emits a simulated `[SOC ALERT]` on tamper/missing.
+- **Verification engine** (`src/verifier.py`): re-reads the log, re-fingerprints it, reports each window as INTACT / TAMPERED / MISSING / UNANCHORED / LEDGER_TAMPERED, pinpoints the first broken window, records `first_noticed_at` per window (set once, never overwritten, cleared on reset), and emits a simulated `[SOC ALERT]` on any compromise.
+- **Ledger self-check** (in `verify`): each anchored row's `chain_hash` is recomputed from its own fields, and each row's `prev_hash` is linked to the previous row's `chain_hash` (row 0 → genesis). A partial edit (even a re-chained single row) is caught as `LEDGER_TAMPERED`. A *full* local re-chain is not catchable in local mode — that's what the EVM anchor covers (see `THREAT_MODEL.md`).
 - **Tamper demo** (`src/tamper.py`): simulates an attacker modifying or deleting a line in a chosen window.
 - **CLI** (`src/vault.py`): `init-demo`, `anchor`, `windows`, `verify`, `tamper-demo`.
 - **HTTP API server** (`src/server.py`): FastAPI exposing the contract endpoints (+ `/api/health`, `/api/reset-demo`), CORS, mock-mode startup banner.
 - **SOC-grade hardening**: `X-API-Key` required on all POST endpoints (`VAULT_API_KEY`, default `demo-key-123`); rate limiting (429) on `/api/anchor` and `/api/tamper-demo` (10/min/IP); security headers on every response (HSTS, nosniff, X-Frame-Options DENY, CSP frame-ancestors, Referrer/Permissions).
 - **DevOps**: `Dockerfile` (python:3.13-slim, non-root) + `docker-compose.yml` (`docker compose up --build`); GitHub Actions CI (`.github/workflows/ci.yml`) runs pytest on push/PR to main.
 - **Docs**: `README.md`, `DEMO_SCRIPT.md`, `THREAT_MODEL.md`, `API_CONTRACT.md` (contract for the frontend), `AGENTS.md` (frontend-integration rules).
-- **Tests** (`tests/`): **18 passing** — engine (windowing, chaining, ledger, verifier) + HTTP API (auth, rate limit, headers, flow).
+- **Tests** (`tests/`): **21 passing** — engine (windowing, chaining, ledger, verifier incl. first_noticed_at and ledger self-check) + HTTP API (auth, rate limit, headers, flow).
 
 ### Proof actually run
 - Clean verify → `INTACT` (3/3 windows match).

@@ -20,6 +20,23 @@ After a breach, attackers (or a malicious insider with admin rights) often **edi
 
 ---
 
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Logs] --> B[Split into 5-minute windows]
+    B --> C[SHA-256 fingerprint per window]
+    C --> D[Hash chain<br/>each fingerprint includes the previous one]
+    D --> E[Ledger<br/>local SQLite append-only<br/>EVM contract: tested on local chain only]
+    E --> F[Verify: re-read log, re-fingerprint, compare]
+    F --> G[Per-window status<br/>INTACT / TAMPERED / MISSING / LEDGER_TAMPERED]
+    G --> H[Dashboard]
+```
+
+Logs are split into fixed 5-minute windows, each window is fingerprinted with SHA-256, and each fingerprint is chained to the previous one so a single change breaks the chain. The fingerprints are stored in an append-only ledger — a local SQLite store for the offline demo, or an EVM smart contract (tested on a local chain only). To check, Verify re-reads the current log, re-fingerprints it, compares against the ledger, and reports each window's status to the dashboard.
+
+---
+
 ## Key features
 
 - **Chained SHA-256 fingerprints** per 5-minute window — deterministic and tamper-evident (change one window and the chain breaks).

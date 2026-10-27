@@ -1,12 +1,12 @@
-2026-10-27 10:00:01 server sshd[1201]: Accepted password for alice from 192.168.10.23 port 54122 ssh2
-2026-10-27 10:01:15 server sshd[1205]: Failed password for bob from 192.168.10.88 port 51233 ssh2
-2026-10-27 10:02:40 server sudo: alice : TTY=pts/0 ; PWD=/home/alice ; USER=root ; COMMAND=/usr/bin/apt update
-2026-10-27 10:04:59 server sshd[1211]: Accepted publickey for carol from 10.0.0.14 port 49002 ssh2
-2026-10-27 10:05:03 server sshd[1230]: Failed password for root from 203.0.113.9 port 40111 ssh2
-2026-10-27 10:06:30 server sshd[1231]: Failed password for root from 203.0.113.9 port 40115 ssh2
-2026-10-27 10:08:00 server sshd[1240]: Accepted password for bob from 192.168.10.88 port 51290 ssh2
-2026-10-27 10:09:45 server sudo: bob : TTY=pts/1 ; PWD=/var/www ; USER=root ; COMMAND=/usr/bin/systemctl restart nginx
-2026-10-27 10:10:10 server sshd[1255]: Accepted password for alice from 192.168.10.23 port 54130 ssh2
-2026-10-27 10:11:22 server sshd[1260]: Failed password for dave from 198.51.100.7 port 33780 ssh2
-2026-10-27 10:13:00 server sshd[1261]: Failed password for dave from 198.51.100.7 port 33784 ssh2
-2026-10-27 10:14:30 server sshd[1270]: Accepted publickey for carol from 10.0.0.14 port 49020 ssh2
+2026-10-27 10:00:11 ip-10-0-1-15 sshd[2041]: Accepted publickey for deploy from 203.0.113.42 port 49620 ssh2: ED25519 SHA256:7Hc3n1Qf0aZ2kR8vLpYx9bWmTnJ4sD6uE1oGqCwKiA
+2026-10-27 10:00:11 ip-10-0-1-15 sshd[2041]: pam_unix(sshd:session): session opened for user deploy(uid=1000) by (uid=0)
+2026-10-27 10:02:27 ip-10-0-1-15 sudo:   deploy : TTY=pts/0 ; PWD=/home/deploy ; USER=root ; COMMAND=/usr/bin/systemctl restart nginx
+2026-10-27 10:04:53 ip-10-0-1-15 sshd[2098]: Failed password for invalid user admin from 185.220.101.5 port 60124 ssh2
+2026-10-27 10:05:08 ip-10-0-1-15 sshd[2103]: Failed password for root from 92.63.197.11 port 54310 ssh2
+2026-10-27 10:06:19 ip-10-0-1-15 sshd[2103]: Failed password for root from 92.63.197.11 port 54310 ssh2
+2026-10-27 10:07:44 ip-10-0-1-15 sshd[2103]: Disconnected from authenticating user root 92.63.197.11 port 54310 [preauth]
+2026-10-27 10:09:02 ip-10-0-1-15 sshd[2140]: Accepted password for analyst from 198.51.100.23 port 51988 ssh2
+2026-10-27 10:10:15 ip-10-0-1-15 sshd[2140]: pam_unix(sshd:session): session opened for user analyst(uid=1002) by (uid=0)
+2026-10-27 10:11:48 ip-10-0-1-15 sudo:  analyst : TTY=pts/1 ; PWD=/var/log ; USER=root ; COMMAND=/usr/bin/cat /etc/shadow
+2026-10-27 10:13:06 ip-10-0-1-15 sshd[2176]: Failed publickey for git from 45.155.205.233 port 40288 ssh2: RSA SHA256:xk29Lm4pQv7rT1sBhN6wYdFe
+2026-10-27 10:14:39 ip-10-0-1-15 sshd[2140]: pam_unix(sshd:session): session closed for user analyst

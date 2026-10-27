@@ -48,6 +48,7 @@ def cmd_init_demo(args):
     if os.path.exists(args.db):
         os.remove(args.db)
     ledger.init_db(args.db)
+    ledger.clear_incidents(args.db)  # forget all first_noticed_at records
     # Also clear the EVM metadata cache so a fresh demo starts clean.
     if os.path.exists(anchors.DEFAULT_CACHE_DB):
         os.remove(anchors.DEFAULT_CACHE_DB)

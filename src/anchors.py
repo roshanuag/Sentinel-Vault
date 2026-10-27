@@ -39,6 +39,7 @@ class LocalAnchor:
 
     def __init__(self, db_path=ledger.DEFAULT_DB_PATH):
         self.db_path = db_path
+        self.store_path = db_path  # where the verifier persists first_noticed_at
         ledger.init_db(db_path)
 
     def anchor(self, records):
@@ -60,6 +61,7 @@ class EvmAnchor:
         self.contract = contract
         self.account = account
         self.cache_db = cache_db_path
+        self.store_path = cache_db_path  # where the verifier persists first_noticed_at
         self.private_key = private_key
         self.rpc_url = rpc_url
         self.address = address

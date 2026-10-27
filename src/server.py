@@ -250,4 +250,5 @@ def post_reset():
     ledger.init_db(DB_PATH)
     if os.path.exists(anchors.DEFAULT_CACHE_DB):
         os.remove(anchors.DEFAULT_CACHE_DB)
+    ledger.clear_incidents(_anchor.store_path)  # forget all first_noticed_at records
     return {"mock": _anchor.is_mock, "status": "reset", "log_path": LOG_PATH}

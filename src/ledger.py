@@ -43,6 +43,12 @@ BEGIN SELECT RAISE(ABORT, 'append-only ledger: UPDATE is not allowed'); END;
 CREATE TRIGGER IF NOT EXISTS anchored_windows_no_delete
 BEFORE DELETE ON anchored_windows
 BEGIN SELECT RAISE(ABORT, 'append-only ledger: DELETE is not allowed'); END;
+
+-- When a window was FIRST noticed tampered/missing (set once, never overwritten).
+CREATE TABLE IF NOT EXISTS incidents (
+    window_id        TEXT PRIMARY KEY,
+    first_noticed_at TEXT NOT NULL
+);
 """
 
 
@@ -120,5 +126,47 @@ def get_all_windows(db_path=DEFAULT_DB_PATH):
             "SELECT * FROM anchored_windows ORDER BY start_time ASC"
         ).fetchall()
         return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def record_first_noticed(window_ids, when, db_path=DEFAULT_DB_PATH):
+    """Record the first time each window was noticed compromised.
+
+    Uses INSERT OR IGNORE so a window's first_noticed_at is written ONCE and is
+    never overwritten by a later verify run. `window_ids` is an iterable.
+    """
+    init_db(db_path)
+    conn = connect(db_path)
+    try:
+        conn.executemany(
+            "INSERT OR IGNORE INTO incidents (window_id, first_noticed_at) VALUES (?, ?)",
+            [(wid, when) for wid in window_ids],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_incidents(db_path=DEFAULT_DB_PATH):
+    """Return {window_id: first_noticed_at} for all recorded incidents."""
+    init_db(db_path)
+    conn = connect(db_path)
+    try:
+        return {
+            row["window_id"]: row["first_noticed_at"]
+            for row in conn.execute("SELECT window_id, first_noticed_at FROM incidents")
+        }
+    finally:
+        conn.close()
+
+
+def clear_incidents(db_path=DEFAULT_DB_PATH):
+    """Forget all first-noticed records (used by reset-demo / init-demo)."""
+    init_db(db_path)
+    conn = connect(db_path)
+    try:
+        conn.execute("DELETE FROM incidents")
+        conn.commit()
     finally:
         conn.close()

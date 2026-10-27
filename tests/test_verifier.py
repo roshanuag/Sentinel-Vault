@@ -1,4 +1,6 @@
 """Verifier catches tampering identically to how the demo shows it."""
+import time
+
 from collector import collect_windows, build_chain
 import anchors
 import verifier
@@ -58,3 +60,26 @@ def test_missing_window_is_detected(sample_log, db_path):
     assert by_index[2]["status"] == "MISSING"
     assert by_index[2]["current_log_hash"] is None
     assert result["summary"]["missing"] == 1
+
+
+def test_first_noticed_at_is_set_once(sample_log, db_path):
+    anchor = _anchored(sample_log, db_path)
+    tamper.tamper_line(sample_log, 1, "delete", 300)
+
+    # First verify: the window is flagged and first_noticed_at is recorded.
+    r1 = verifier.verify(sample_log, anchor, 300)
+    w1 = next(w for w in r1["windows"] if w["index"] == 1)
+    assert w1["status"] == "TAMPERED"
+    assert w1["first_noticed_at"] is not None
+    first = w1["first_noticed_at"]
+
+    # An intact window has no first_noticed_at.
+    w0 = next(w for w in r1["windows"] if w["index"] == 0)
+    assert w0["status"] == "INTACT"
+    assert w0["first_noticed_at"] is None
+
+    # A later verify (a clearly later moment) must NOT overwrite it.
+    time.sleep(0.02)
+    r2 = verifier.verify(sample_log, anchor, 300)
+    w1_again = next(w for w in r2["windows"] if w["index"] == 1)
+    assert w1_again["first_noticed_at"] == first

@@ -118,6 +118,7 @@ Re-read the current log, fingerprint it the same way, and compare each window ag
       "anchored_line_count": 4,
       "current_line_count": 4,
       "anchored_at": "2026-10-27T12:34:56.000000+00:00",
+      "first_noticed_at": "2026-10-27T12:40:00.000000+00:00",
       "detail": "Content changed; same line count (4) - a line was likely modified."
     }
   ]
@@ -126,6 +127,7 @@ Re-read the current log, fingerprint it the same way, and compare each window ag
 
 - `overall_status`: `INTACT` (all good), `COMPROMISED` (any tampered or missing window), or `NO_ANCHORS` (ledger empty).
 - `first_break`: the first non-intact window, or `null` if none.
+- `first_noticed_at`: when this window was **first** seen TAMPERED/MISSING (ISO UTC). Set once on the first verify that flags it and never changed on later runs; `null` until then. Cleared by `reset-demo`.
 - For a `MISSING` window, `current_log_hash` and `current_line_count` are `null`.
 - For an `UNANCHORED` window, `anchored_log_hash`, `anchored_line_count`, and `anchored_at` are `null`.
 

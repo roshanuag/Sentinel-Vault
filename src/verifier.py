@@ -19,6 +19,7 @@ timestamp an investigator should look at.
 from datetime import datetime, timezone
 
 from collector import collect_windows, build_chain, DEFAULT_WINDOW_SECONDS
+import ledger
 
 
 def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
@@ -133,6 +134,17 @@ def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
 
     # Keep the timeline in chronological order for the dashboard.
     result_windows.sort(key=lambda w: w["start_time"])
+
+    # Record when each compromised window was FIRST noticed (written once and never
+    # overwritten), then attach first_noticed_at to every window for the response.
+    now = datetime.now(timezone.utc).isoformat()
+    newly_flagged = [
+        w["window_id"] for w in result_windows if w["status"] in ("TAMPERED", "MISSING")
+    ]
+    ledger.record_first_noticed(newly_flagged, now, db_path=anchor.store_path)
+    first_noticed = ledger.get_incidents(anchor.store_path)
+    for w in result_windows:
+        w["first_noticed_at"] = first_noticed.get(w["window_id"])
 
     compromised = summary["tampered"] > 0 or summary["missing"] > 0
     overall_status = "COMPROMISED" if compromised else "INTACT"

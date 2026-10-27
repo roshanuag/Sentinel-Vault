@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Shield, Radio, Volume2, VolumeX, Database, Lock, WifiOff } from "lucide-react";
+import { Shield, Radio, Volume2, VolumeX, Database, WifiOff } from "lucide-react";
 import { setSoundEnabled, playClick } from "../lib/sound";
 
 interface TopBarProps {
@@ -8,10 +8,9 @@ interface TopBarProps {
     mock: boolean;
     ledger_type: "local" | "testnet" | "mainnet";
   };
-  onOpenAdminPanel?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ apiUp, mode, onOpenAdminPanel }) => {
+export const TopBar: React.FC<TopBarProps> = ({ apiUp, mode }) => {
   const [timeStr, setTimeStr] = useState<string>("");
   const [soundOn, setSoundOn] = useState<boolean>(true);
 
@@ -103,23 +102,6 @@ export const TopBar: React.FC<TopBarProps> = ({ apiUp, mode, onOpenAdminPanel })
                 Ledger: {mode.ledger_type === "local" ? "Local" : mode.ledger_type === "testnet" ? "Testnet" : "Mainnet"} (set by server)
               </span>
             </div>
-          )}
-
-          {/* Main Admin Panel Button */}
-          {onOpenAdminPanel && (
-            <button
-              onClick={() => {
-                playClick();
-                onOpenAdminPanel();
-              }}
-              className="liquid-glass-btn flex items-center gap-2 px-4 py-2 rounded-full text-[#2A2421] text-xs font-sans font-medium transition-all cursor-pointer shadow-xs"
-              title="Open Main Admin Panel (Data Edit/Delete & Immutable History)"
-            >
-              <span className="btn-icon w-5 h-5 text-white">
-                <Lock className="w-3 h-3 text-[#A07855]" />
-              </span>
-              <span>Admin Panel</span>
-            </button>
           )}
 
           {/* Audio toggle */}

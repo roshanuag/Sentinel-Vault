@@ -7,11 +7,9 @@ import { CommandBar } from "./components/CommandBar";
 import { TamperConsole } from "./components/TamperConsole";
 import { Timeline } from "./components/Timeline";
 import { InspectDrawer } from "./components/InspectDrawer";
-import { AdminPanel } from "./components/AdminPanel";
-import { AdminLoginModal } from "./components/AdminLoginModal";
 import { api, WindowObject, VerifyResponse, MOCK_MODE } from "./lib/api";
-import { playSuccess, playAlarm, playClick } from "./lib/sound";
-import { Shield, Sparkles, Lock } from "lucide-react";
+import { playSuccess, playAlarm } from "./lib/sound";
+import { Shield, Sparkles } from "lucide-react";
 
 export default function App() {
   // System & Connection State
@@ -39,61 +37,6 @@ export default function App() {
     before?: string;
     after?: string;
   } | null>(null);
-
-  // View State: "dashboard" (Forensics SOC) vs "admin" (Main Admin Panel)
-  const [view, setView] = useState<"dashboard" | "admin">("dashboard");
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      return sessionStorage.getItem("sentinel_admin_auth") === "true";
-    } catch {
-      return false;
-    }
-  });
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
-
-  useEffect(() => {
-    const handleHash = () => {
-      if (window.location.hash === "#admin") {
-        const authed = sessionStorage.getItem("sentinel_admin_auth") === "true";
-        if (authed) {
-          setView("admin");
-        } else {
-          setView("dashboard");
-          setIsLoginModalOpen(true);
-        }
-      } else if (window.location.hash === "#vault-soc" || window.location.hash === "#hero") {
-        setView("dashboard");
-      }
-    };
-    handleHash();
-    window.addEventListener("hashchange", handleHash);
-    return () => window.removeEventListener("hashchange", handleHash);
-  }, []);
-
-  const handleOpenAdminPanel = () => {
-    playClick();
-    if (isAuthenticated || sessionStorage.getItem("sentinel_admin_auth") === "true") {
-      setView("admin");
-      window.location.hash = "#admin";
-    } else {
-      setIsLoginModalOpen(true);
-    }
-  };
-
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-    setIsLoginModalOpen(false);
-    setView("admin");
-    window.location.hash = "#admin";
-  };
-
-  const handleLogout = () => {
-    playClick();
-    sessionStorage.removeItem("sentinel_admin_auth");
-    setIsAuthenticated(false);
-    setView("dashboard");
-    window.location.hash = "#vault-soc";
-  };
 
   // Apply verify payload to state
   const applyVerifyData = useCallback((data: VerifyResponse) => {
@@ -228,19 +171,6 @@ export default function App() {
 
   const chainTip = windows.length > 0 ? windows[windows.length - 1].chain_hash || null : null;
 
-  // Render Simple Admin Panel when admin view is requested
-  if (view === "admin") {
-    return (
-      <AdminPanel
-        onBackToDashboard={() => {
-          setView("dashboard");
-          window.location.hash = "#vault-soc";
-        }}
-        onLogout={handleLogout}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#F7F4EE] text-[#2A2421] vintage-paper-bg relative selection:bg-[#A07855]/20 selection:text-[#A07855] scroll-smooth font-sans">
       {/* MOCK MODE BANNER: only shown when VITE_MOCK_MODE=true. Makes it unmistakable
@@ -277,7 +207,6 @@ export default function App() {
             { label: "Approach", href: "#hero" },
             { label: "Journal", href: "#hero" },
             { label: "SentinelVault SOC", href: "#vault-soc" },
-            { label: "Admin Panel", href: "#admin" },
           ]}
           navCta={{ label: "Contact", href: "#hero" }}
         />
@@ -295,11 +224,10 @@ export default function App() {
           className={`ambient-glow ${overall === "COMPROMISED" ? "ambient-glow-compromised" : ""}`}
         />
 
-        {/* TopBar with branding, health pill, Honesty Badge, and Admin navigation */}
+        {/* TopBar with branding, health pill, and read-only ledger status */}
         <TopBar
           apiUp={apiUp}
           mode={mode}
-          onOpenAdminPanel={handleOpenAdminPanel}
         />
 
         {/* Main SOC Container */}
@@ -388,7 +316,7 @@ export default function App() {
         </footer>
       </section>
 
-      {/* Quick Floating View Switcher (Hero ⟷ Vault SOC ⟷ Admin) Centered */}
+      {/* Quick Floating View Switcher (Hero ⟷ Vault SOC) Centered */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-full css-glassmorphism-pill shadow-xl font-mono text-xs">
         <a
           href="#hero"
@@ -411,25 +339,7 @@ export default function App() {
           </span>
           <span className="font-serif font-medium whitespace-nowrap">Forensics SOC</span>
         </a>
-        <span className="text-[#D5CDBD]">|</span>
-        <button
-          onClick={handleOpenAdminPanel}
-          className="liquid-glass-btn flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[#7E756B] hover:text-[#2A2421] transition-colors cursor-pointer"
-          title="Open Simple Main Admin Panel"
-        >
-          <span className="btn-icon w-5 h-5 text-white">
-            <Lock className="w-3 h-3 text-[#A07855]" />
-          </span>
-          <span className="font-serif font-medium whitespace-nowrap">Admin Panel</span>
-        </button>
       </div>
-
-      {/* Admin Authentication Login Modal */}
-      <AdminLoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onSuccess={handleLoginSuccess}
-      />
     </div>
   );
 }

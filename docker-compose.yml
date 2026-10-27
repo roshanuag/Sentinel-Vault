@@ -1,0 +1,17 @@
+# Spin up the SentinelVault backend with:  docker compose up --build
+# Then open http://localhost:8000/docs
+services:
+  backend:
+    build: .
+    image: sentinelvault-backend
+    container_name: sentinelvault-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Default: local append-only ledger (mock: true), fully offline.
+      LEDGER_BACKEND: local
+      # For the EVM/testnet mode instead, point these at a reachable node:
+      # LEDGER_BACKEND: testnet
+      # RPC_URL: http://host.docker.internal:8545
+      # CONTRACT_ADDRESS: "0x..."
+    restart: unless-stopped

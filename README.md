@@ -4,6 +4,8 @@
 
 Graphite 26 · Problem Statement 9 · Cybersecurity track.
 
+![CI](https://github.com/roshanuag/Tamper-Proof-Security-Log-Vault/actions/workflows/ci.yml/badge.svg)
+
 ---
 
 ## The problem
@@ -62,6 +64,8 @@ Each window's fingerprint includes the **previous** window's fingerprint, exactl
 - **Pluggable adapter** — one env var switches between `local` (offline, `mock: true`) and `testnet` (on-chain, `mock: false`); falls back to local automatically if the chain is unreachable.
 - **Verification engine** — reports each window as `INTACT` / `TAMPERED` / `MISSING` / `UNANCHORED` and pinpoints the first break (index + timestamp).
 - **FastAPI backend** — `anchor`, `verify`, `tamper-demo`, `windows` endpoints with a live `/docs` page.
+- **Hardened API surface** — strict security headers on every response (HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, CSP `frame-ancestors`, Referrer/Permissions policies).
+- **Dockerized + CI** — one-command `docker compose up`, and `pytest` runs on every push via GitHub Actions.
 - **Tamper demo** — simulates an attacker editing or deleting a line so the detection can be shown live.
 
 ## Repository layout
@@ -95,7 +99,19 @@ API_CONTRACT.md  the HTTP contract (source of truth for any frontend)
 pip install -r requirements.txt
 ```
 
-`requirements.txt`: `fastapi`, `uvicorn[standard]`, and `web3` (web3 is only needed for the optional EVM backend; it installs without a C compiler).
+`requirements.txt`: `fastapi`, `uvicorn[standard]`, `web3` (only needed for the optional EVM backend; installs without a C compiler), and `pytest` (tests).
+
+### With Docker (one command)
+
+No Python setup needed — just Docker:
+
+```bash
+docker compose up --build
+```
+
+This builds the image (Python 3.13-slim, runs as a non-root user), seeds the demo log + empty ledger, and serves the API at **http://localhost:8000** (try **/docs**). Stop with `Ctrl+C` or `docker compose down`.
+
+To run the backend in EVM/testnet mode via Docker, set `LEDGER_BACKEND=testnet` and an `RPC_URL` the container can reach (see the commented block in `docker-compose.yml`; use `host.docker.internal` to reach a node running on the host).
 
 ## Run — Local mode (default, `mock: true`)
 

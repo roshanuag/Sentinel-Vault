@@ -226,17 +226,6 @@ export default function App() {
     }
   };
 
-  // Toggle Mode (Local SQLite vs EVM Blockchain)
-  const handleToggleMode = (newMode: "local" | "testnet") => {
-    api.setMockLedgerType(newMode);
-    setMode({
-      mock: newMode === "local",
-      ledger_type: newMode,
-    });
-    setMessage(`Ledger architecture toggled to ${newMode === "local" ? "Local Append-Only SQLite" : "EVM Testnet Blockchain"}.`);
-    handleVerify();
-  };
-
   const chainTip = windows.length > 0 ? windows[windows.length - 1].chain_hash || null : null;
 
   // Render Simple Admin Panel when admin view is requested
@@ -310,7 +299,6 @@ export default function App() {
         <TopBar
           apiUp={apiUp}
           mode={mode}
-          onToggleMode={handleToggleMode}
           onOpenAdminPanel={handleOpenAdminPanel}
         />
 
@@ -390,7 +378,11 @@ export default function App() {
               <span>· SentinelVault SOC</span>
             </div>
             <span className="text-[#9F9588]">
-              Honesty Mode: {mode.mock ? "Local Append-Only Database (mock: true)" : "EVM Smart Contract (mock: false)"}
+              {apiUp === false
+                ? "Backend offline"
+                : apiUp === null
+                ? "Checking backend…"
+                : `Ledger: ${mode.ledger_type === "local" ? "Local" : mode.ledger_type === "testnet" ? "Testnet" : "Mainnet"} (set by server)`}
             </span>
           </div>
         </footer>

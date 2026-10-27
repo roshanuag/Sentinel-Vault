@@ -521,11 +521,4 @@ export const api = {
     return await res.json();
   },
 
-  /**
-   * Switch simulated mode between local append-only vs EVM testnet
-   */
-  setMockLedgerType(type: "local" | "testnet") {
-    mockEngine.mode.ledger_type = type;
-    mockEngine.mode.mock = type === "local";
-  },
 };

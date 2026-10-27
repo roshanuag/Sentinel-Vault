@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Shield, Radio, Volume2, VolumeX, Cpu, Database, Lock } from "lucide-react";
+import { Shield, Radio, Volume2, VolumeX, Database, Lock, WifiOff } from "lucide-react";
 import { setSoundEnabled, playClick } from "../lib/sound";
 
 interface TopBarProps {
@@ -8,11 +8,10 @@ interface TopBarProps {
     mock: boolean;
     ledger_type: "local" | "testnet" | "mainnet";
   };
-  onToggleMode?: (type: "local" | "testnet") => void;
   onOpenAdminPanel?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ apiUp, mode, onToggleMode, onOpenAdminPanel }) => {
+export const TopBar: React.FC<TopBarProps> = ({ apiUp, mode, onOpenAdminPanel }) => {
   const [timeStr, setTimeStr] = useState<string>("");
   const [soundOn, setSoundOn] = useState<boolean>(true);
 
@@ -81,53 +80,29 @@ export const TopBar: React.FC<TopBarProps> = ({ apiUp, mode, onToggleMode, onOpe
               }`}
             />
             <span className="text-[#7E756B]">API:</span>
-            <span className={apiUp === true ? "text-[#2E7D5B] font-medium" : "text-[#B87720] font-medium"}>
-              {apiUp === true ? ":8000 LIVE" : "CLIENT SIM"}
+            <span className={apiUp === true ? "text-[#2E7D5B] font-medium" : apiUp === false ? "text-[#B87720] font-medium" : "text-[#857E76] font-medium"}>
+              {apiUp === true ? ":8000 LIVE" : apiUp === false ? "OFFLINE" : "CHECKING"}
             </span>
           </div>
 
-          {/* Honesty Badge (Hard Rule #2) */}
-          <div
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all ${
-              mode.mock
-                ? "liquid-glass-pill text-[#A07855] shadow-xs"
-                : "bg-[#7D6B9C]/10 text-[#7D6B9C] border border-[#7D6B9C]/30 backdrop-blur-md shadow-xs"
-            }`}
-          >
-            {mode.mock ? (
-              <>
-                <Database className="w-3.5 h-3.5 text-[#A07855]" />
-                <span className="font-semibold">Local Append-Only Ledger</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full liquid-glass-pill text-[#A07855] font-bold">
-                  MOCK: TRUE
-                </span>
-              </>
-            ) : (
-              <>
-                <Cpu className="w-3.5 h-3.5 text-[#7D6B9C]" />
-                <span className="font-semibold">EVM Blockchain Ledger</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#7D6B9C]/20 text-[#7D6B9C] font-bold">
-                  ON-CHAIN
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* Mode switch button */}
-          {onToggleMode && (
-            <button
-              onClick={() => {
-                playClick();
-                onToggleMode(mode.mock ? "testnet" : "local");
-              }}
-              className="liquid-glass-btn flex items-center gap-2 px-4 py-2 rounded-full text-[#2A2421] text-xs font-mono font-medium transition-all cursor-pointer shadow-xs"
-              title="Toggle Ledger Architecture between Local SQLite vs EVM Blockchain"
-            >
-              <span>Switch to {mode.mock ? "EVM" : "Local"}</span>
-              <span className="btn-icon w-5 h-5 text-white">
-                <Cpu className="w-3 h-3 text-[#A07855]" />
+          {/* Ledger status: read-only, reported by the backend. Never claims a ledger when offline. */}
+          {apiUp === false ? (
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#B87720]/10 text-[#B87720] border border-[#B87720]/30 backdrop-blur-md shadow-xs">
+              <WifiOff className="w-3.5 h-3.5 text-[#B87720]" />
+              <span className="font-semibold">Backend offline</span>
+            </div>
+          ) : apiUp === null ? (
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-pill text-[#7E756B] shadow-xs">
+              <Database className="w-3.5 h-3.5 text-[#7E756B]" />
+              <span className="font-semibold">Checking backend…</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-pill text-[#A07855] shadow-xs">
+              <Database className="w-3.5 h-3.5 text-[#A07855]" />
+              <span className="font-semibold">
+                Ledger: {mode.ledger_type === "local" ? "Local" : mode.ledger_type === "testnet" ? "Testnet" : "Mainnet"} (set by server)
               </span>
-            </button>
+            </div>
           )}
 
           {/* Main Admin Panel Button */}

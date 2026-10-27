@@ -21,7 +21,9 @@ Endpoints:
 
 import os
 import sys
+import time
 import shutil
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -29,10 +31,11 @@ from typing import Optional
 # "src.server:app" (uvicorn, from the project root) or run directly.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Header, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from collector import collect_windows, build_chain, DEFAULT_WINDOW_SECONDS
 import ledger
@@ -50,6 +53,12 @@ FRONTEND_ORIGIN = os.environ.get(
     "FRONTEND_ORIGIN", "http://localhost:5173,http://localhost:5174"
 )
 ALLOWED_ORIGINS = [o.strip() for o in FRONTEND_ORIGIN.split(",") if o.strip()]
+
+# API key required on state-changing (POST) requests.
+VAULT_API_KEY = os.environ.get("VAULT_API_KEY", "demo-key-123")
+# Rate limit for the abuse-prone demo endpoints (per client IP).
+RATE_LIMIT_MAX = int(os.environ.get("RATE_LIMIT_MAX", "10"))
+RATE_LIMIT_WINDOW = int(os.environ.get("RATE_LIMIT_WINDOW", "60"))
 
 # The active anchor backend, built once at startup.
 _anchor = None
@@ -102,6 +111,51 @@ async def add_security_headers(request, call_next):
     return response
 
 
+# ---- API key + rate limiting ------------------------------------------------
+@app.exception_handler(StarletteHTTPException)
+async def _http_exception_handler(request, exc):
+    # Keep the {"error": ...} response shape for raised HTTPExceptions.
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
+
+
+def require_api_key(x_api_key: Optional[str] = Header(default=None)):
+    """Reject state-changing requests without the correct X-API-Key header."""
+    if x_api_key != VAULT_API_KEY:
+        raise StarletteHTTPException(status_code=401, detail="invalid or missing X-API-Key")
+
+
+# In-memory sliding-window rate limiter: {bucket:ip -> [timestamps]}.
+_rate_hits = defaultdict(list)
+
+
+def _rate_limit(bucket, request):
+    ip = request.client.host if request.client else "unknown"
+    hits = _rate_hits[f"{bucket}:{ip}"]
+    now = time.time()
+    cutoff = now - RATE_LIMIT_WINDOW
+    while hits and hits[0] < cutoff:
+        hits.pop(0)
+    if len(hits) >= RATE_LIMIT_MAX:
+        raise StarletteHTTPException(
+            status_code=429,
+            detail=f"rate limit exceeded: max {RATE_LIMIT_MAX} requests per {RATE_LIMIT_WINDOW}s",
+        )
+    hits.append(now)
+
+
+def rate_limit_anchor(request: Request):
+    _rate_limit("anchor", request)
+
+
+def rate_limit_tamper(request: Request):
+    _rate_limit("tamper", request)
+
+
+def reset_rate_limits():
+    """Clear rate-limit counters (used by tests)."""
+    _rate_hits.clear()
+
+
 # ---- Request models ---------------------------------------------------------
 class AnchorRequest(BaseModel):
     log_path: Optional[str] = None
@@ -139,7 +193,7 @@ def get_windows():
     }
 
 
-@app.post("/api/anchor")
+@app.post("/api/anchor", dependencies=[Depends(require_api_key), Depends(rate_limit_anchor)])
 def post_anchor(req: AnchorRequest = AnchorRequest()):
     log_path = req.log_path or LOG_PATH
     try:
@@ -161,7 +215,7 @@ def post_anchor(req: AnchorRequest = AnchorRequest()):
     }
 
 
-@app.post("/api/verify")
+@app.post("/api/verify", dependencies=[Depends(require_api_key)])
 def post_verify(req: VerifyRequest = VerifyRequest()):
     log_path = req.log_path or LOG_PATH
     try:
@@ -172,7 +226,7 @@ def post_verify(req: VerifyRequest = VerifyRequest()):
         return _error(400, str(exc))
 
 
-@app.post("/api/tamper-demo")
+@app.post("/api/tamper-demo", dependencies=[Depends(require_api_key), Depends(rate_limit_tamper)])
 def post_tamper(req: TamperRequest):
     log_path = req.log_path or LOG_PATH
     try:
@@ -185,7 +239,7 @@ def post_tamper(req: TamperRequest):
         return _error(400, str(exc))
 
 
-@app.post("/api/reset-demo")
+@app.post("/api/reset-demo", dependencies=[Depends(require_api_key)])
 def post_reset():
     if not os.path.exists(SAMPLE_PATH):
         return _error(400, f"sample log not found: {SAMPLE_PATH!r}")

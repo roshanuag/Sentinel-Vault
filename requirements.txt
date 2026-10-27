@@ -2,7 +2,8 @@ fastapi==0.162.0
 uvicorn[standard]==0.54.0
 # Only needed for the optional EVM/testnet anchor backend (LEDGER_BACKEND=testnet):
 web3==8.0.0
-# Test suite (run: pytest):
+# Test suite (run: pytest); httpx backs FastAPI's TestClient for the API tests:
 pytest==9.1.1
+httpx==0.28.1
 # Dev-only, to recompile contracts/LogVault.sol -> LogVault.json (not needed at runtime):
 #   pip install py-solc-x   &&   python contracts/build.py

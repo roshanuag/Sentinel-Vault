@@ -8,7 +8,10 @@ This file defines the exact HTTP API between the **backend** (owned by the backe
 - **`mock` field:** every response carries `"mock": true|false`.
   - `mock: true` when the anchor is the **local** append-only ledger (immutability is *simulated*, offline demo). Hashing and verification are **real**.
   - `mock: false` only when anchored to a real **testnet** (`ledger_type: "testnet"`).
-- **Implementation status (2026-10-27):** the backend **engine** behind every endpoint is built and tested via the CLI (`src/vault.py`) and returns exactly these shapes. The **HTTP layer** (FastAPI) is wired in the next milestone. The frontend can build against these shapes now.
+- **Authentication:** every **POST** endpoint requires an `X-API-Key` header matching the server's `VAULT_API_KEY` (default `demo-key-123`). Missing/wrong key → `401 {"error": "invalid or missing X-API-Key"}`. GET endpoints need no key.
+- **Rate limiting:** `POST /api/anchor` and `POST /api/tamper-demo` are limited to **10 requests/minute per client IP** (configurable). Exceeding it → `429 {"error": "rate limit exceeded: ..."}`.
+- **Security headers:** every response includes HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, a `frame-ancestors` CSP, and Referrer/Permissions policies.
+- **Implementation status:** the HTTP server (`src/server.py`) is built and tested; responses match these shapes. Error responses are always `{"error": "..."}`.
 
 Common fields:
 - A **window** is a fixed time slice of logs (default 5 minutes).
@@ -191,4 +194,7 @@ Resets the working log to the pristine sample and clears the ledger, so a demo c
 | `PRIVATE_KEY` | funded key to sign txs (public testnet; omit for ganache) | _(unset)_ |
 | `CONTRACT_ADDRESS` | reuse an already-deployed `LogVault` (else one is deployed) | _(unset)_ |
 | `WINDOW_SECONDS` | window size in seconds | `300` |
-| `FRONTEND_ORIGIN` | allowed CORS origin | `http://localhost:5173` |
+| `FRONTEND_ORIGIN` | allowed CORS origins (comma-separated) | `http://localhost:5173,http://localhost:5174` |
+| `VAULT_API_KEY` | required `X-API-Key` for POST endpoints | `demo-key-123` |
+| `RATE_LIMIT_MAX` | max requests/window for `/api/anchor` & `/api/tamper-demo` | `10` |
+| `RATE_LIMIT_WINDOW` | rate-limit window, seconds | `60` |

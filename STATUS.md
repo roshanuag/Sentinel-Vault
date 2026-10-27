@@ -5,9 +5,9 @@
 
 ## Current milestone
 
-**Milestone 3 — FastAPI server exposing the 4 endpoints: DONE and TESTED.**
+**Milestone 5 — Frontend dashboard scaffolded (React + Vite + Tailwind): BUILDS; live visuals NOT TESTED by backend owner (needs a browser click-through).**
 
-Previous: Milestone 2 (anchor storage + verification engine + contract) — DONE and TESTED.
+Previous: Milestone 3 (FastAPI server, 4 endpoints) — DONE and TESTED. Milestone 2 (anchor storage + verification engine + contract) — DONE and TESTED.
 
 ## What works (real, not mock)
 
@@ -18,6 +18,8 @@ Previous: Milestone 2 (anchor storage + verification engine + contract) — DONE
 - **CLI** (`src/vault.py`): `init-demo`, `anchor`, `windows`, `verify`, `tamper-demo`.
 - **HTTP API server** (`src/server.py`): FastAPI exposing the 4 contract endpoints (+ `/api/health`, `/api/reset-demo`), CORS for the frontend origin, and a mock-mode startup banner.
 - **`API_CONTRACT.md`**: full spec of the endpoints for Teammate 1's React dashboard. The server returns these exact JSON shapes.
+- **Frontend scaffold** (`frontend/`): React + Vite + Tailwind v4 dashboard — Header with mode badge, Controls bar (Anchor / Verify / Reset), Tamper panel (window + modify/delete), and a colour-coded forensic timeline. A starting point for Teammate 1 to extend.
+- **`AGENTS.md`**: rules file for the frontend teammate (Codex) — how to run the API, CORS, and pointer to `API_CONTRACT.md`.
 
 ### Proof actually run (2026-10-27)
 - Clean verify → `INTACT` (3/3 windows match). Chain tip matches Milestone 1 (`01ef2f7c…`).
@@ -25,6 +27,7 @@ Previous: Milestone 2 (anchor storage + verification engine + contract) — DONE
 - Delete a line in Window 1 → verify → Window 1 `TAMPERED` ("line count 4 → 3, likely deleted").
 - Ledger UPDATE and DELETE both rejected: `append-only ledger: ... is not allowed`.
 - **API: started the real uvicorn server and ran 10 checks (1 valid + 1 invalid per endpoint, plus the tamper flow) — all 10 PASSED.** Startup banner printed: `[INFO] Ledger running in LOCAL APPEND-ONLY mode (mock: true).`
+- **Frontend: `npm install` clean (0 vulnerabilities); `npm run build` compiled (33 modules, Tailwind CSS generated, no errors); `npm run dev` serves the app (HTTP 200, root + script + title present).** NOT TESTED: the visual look and click-through in a real browser against the live API — that needs someone to open http://localhost:5173 and click the buttons.
 
 ## What is REAL vs SIMULATED (mock honesty)
 
@@ -67,11 +70,31 @@ python src/vault.py verify                     # expect: Window 0 TAMPERED
 ```
 - **Working** = clean verify is INTACT; after tamper, only the attacked window turns TAMPERED. **Broken** = verify errors, tamper not detected, or wrong window flagged.
 
+### C) Run backend + frontend side by side (the full demo)
+
+**Terminal 1 — backend** (from the repo root):
+```
+python src/vault.py init-demo
+python -m uvicorn src.server:app --reload
+```
+
+**Terminal 2 — frontend** (from the repo root):
+```
+cd frontend
+npm install          # first time only
+npm run dev
+```
+
+Then open **http://localhost:5173** in a browser.
+- **Check it:** click **Anchor Logs** → 3 cards appear → click **Verify Integrity** → all green INTACT. In the Tamper panel pick **Window 0**, **Modify line**, click **Trigger Attack** → the timeline auto-verifies and Window 0 turns **red TAMPERED** while the others stay green. **Reset Demo** puts it back.
+- **Working** = the mode badge reads "Local Append-Only Ledger (Simulated)", the API badge reads "connected", and the tamper turns exactly one window red. **Broken** = API badge "offline" (backend not running or CORS), or no cards appear.
+
 ## Files
 
-- `src/collector.py`, `src/ledger.py`, `src/verifier.py`, `src/tamper.py`, `src/vault.py`, `src/server.py`
-- `API_CONTRACT.md`, `requirements.txt`, `data/sample_auth.log`
-- Generated (git-ignored): `data/server.log`, `data/ledger.sqlite`
+- Backend: `src/collector.py`, `src/ledger.py`, `src/verifier.py`, `src/tamper.py`, `src/vault.py`, `src/server.py`
+- `API_CONTRACT.md`, `AGENTS.md`, `requirements.txt`, `data/sample_auth.log`
+- Frontend: `frontend/` (React + Vite + Tailwind) — `src/App.jsx`, `src/api.js`, `src/components/*`
+- Generated (git-ignored): `data/server.log`, `data/ledger.sqlite`, `frontend/node_modules/`, `frontend/dist/`
 
 ## Environment
 
@@ -87,8 +110,8 @@ python src/vault.py verify                     # expect: Window 0 TAMPERED
 
 ## Next step
 
-**Milestone 4/5 options (your call):**
-- **Frontend integration (Milestone 5):** Teammate 1 builds the React timeline dashboard against `API_CONTRACT.md` and we wire it to the running server (check CORS, loading/error states). This is the biggest demo win.
-- **Live testnet adapter (Milestone 4, optional):** add the `ledger_type="testnet"` anchor so `mock` flips to `false` — only worth it if Wi-Fi is reliable; local ledger stays the primary demo.
+1. **Open the dashboard in a browser and click through it** (Terminal 1 + Terminal 2 above) to confirm the visuals/interaction — this is the one thing not yet verified.
+2. **Hand the `frontend/` scaffold to Teammate 1** (Codex, via `AGENTS.md`) to polish the look and extend it.
+3. **Optional (Milestone 4):** live testnet adapter so `mock` flips to `false` — only if Wi-Fi is reliable; local ledger stays the primary demo.
 
-Wait for go-ahead before starting either.
+Wait for go-ahead before starting.

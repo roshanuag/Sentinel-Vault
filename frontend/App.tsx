@@ -107,7 +107,7 @@ export default function App() {
       const verifyData = await api.verify();
       applyVerifyData(verifyData);
       if (verifyData.overall_status === "INTACT") {
-        setMessage("All 5-minute time windows verified intact against immutable ledger.");
+        setMessage("All 5-minute time windows verified intact against the anchored ledger.");
       } else if (verifyData.overall_status === "COMPROMISED") {
         setMessage(`TAMPERING DETECTED at Window ${verifyData.first_break?.index}: ${verifyData.first_break?.detail}`);
       } else {
@@ -252,6 +252,7 @@ export default function App() {
             firstBreak={firstBreak}
             chainBrokenFrom={chainBrokenFrom}
             summary={summary}
+            ledgerType={mode.ledger_type}
             busy={busy !== null}
           />
 
@@ -261,7 +262,7 @@ export default function App() {
             chainTip={chainTip}
             firstBreak={firstBreak}
             ledgerType={mode.ledger_type}
-            mock={mode.mock}
+            apiUp={apiUp}
           />
 
           {/* 3. CommandBar: Primary Action Buttons ([Anchor], [Verify], [Reset Demo]) */}

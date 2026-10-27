@@ -1,13 +1,14 @@
 import React from "react";
 import { Link2, Clock, AlertOctagon, CheckCircle2 } from "lucide-react";
 import { shortHash } from "../lib/ui";
+import { MOCK_MODE } from "../lib/api";
 
 interface QuickStatsProps {
   totalWindows: number;
   chainTip: string | null;
   firstBreak: { index: number; window_id: string; status: string; detail: string } | null;
   ledgerType: "local" | "testnet" | "mainnet";
-  mock: boolean;
+  apiUp: boolean | null;
 }
 
 export const QuickStats: React.FC<QuickStatsProps> = ({
@@ -15,7 +16,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
   chainTip,
   firstBreak,
   ledgerType,
-  mock,
+  apiUp,
 }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 font-mono">
@@ -44,7 +45,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
           <span className="text-sm font-semibold text-[#A07855] block truncate" title={chainTip || "No tip"}>
             {shortHash(chainTip, 7, 7)}
           </span>
-          <span className="text-xs text-[#7E756B] block mt-0.5">SHA-256 mini-blockchain</span>
+          <span className="text-xs text-[#7E756B] block mt-0.5">SHA-256 hash chain</span>
         </div>
         <div className="w-11 h-11 shrink-0 rounded-full liquid-glass-btn flex items-center justify-center text-[#A07855]">
           <span className="btn-icon w-8 h-8 text-white">
@@ -92,22 +93,44 @@ export const QuickStats: React.FC<QuickStatsProps> = ({
         </div>
       </div>
 
-      {/* Ledger Security Model */}
+      {/* Ledger Backend (read-only; gated on backend availability, like the top badge) */}
       <div className="liquid-glass-card p-4 sm:p-5 rounded-2xl shadow-xs flex items-center justify-between">
         <div>
           <span className="text-[11px] text-[#7E756B] uppercase tracking-wider block mb-1 font-sans font-semibold">
             Ledger Backend
           </span>
-          <span className="text-sm font-bold text-[#2A2421] block font-serif">
-            {mock ? "SQLite (Triggers)" : `EVM (${ledgerType})`}
-          </span>
-          <span className="text-xs text-[#7E756B] block mt-0.5">
-            {mock ? `Local ${ledgerType} · Triggers Blocked` : "On-chain Merkle Root"}
-          </span>
+          {MOCK_MODE ? (
+            <>
+              <span className="text-sm font-bold text-[#BA4A38] block font-serif">MOCK DATA</span>
+              <span className="text-xs text-[#7E756B] block mt-0.5">Simulated in browser</span>
+            </>
+          ) : apiUp === false ? (
+            <>
+              <span className="text-sm font-bold text-[#B87720] block font-serif">Backend offline</span>
+              <span className="text-xs text-[#7E756B] block mt-0.5">No ledger reported</span>
+            </>
+          ) : apiUp === null ? (
+            <>
+              <span className="text-sm font-bold text-[#2A2421] block font-serif">Checking…</span>
+              <span className="text-xs text-[#7E756B] block mt-0.5">Contacting backend</span>
+            </>
+          ) : ledgerType === "local" ? (
+            <>
+              <span className="text-sm font-bold text-[#2A2421] block font-serif">SQLite (append-only)</span>
+              <span className="text-xs text-[#7E756B] block mt-0.5">Local ledger · set by server</span>
+            </>
+          ) : (
+            <>
+              <span className="text-sm font-bold text-[#2A2421] block font-serif">EVM ({ledgerType})</span>
+              <span className="text-xs text-[#7E756B] block mt-0.5">On-chain anchor · set by server</span>
+            </>
+          )}
         </div>
         <div className="w-11 h-11 rounded-full liquid-glass-btn flex items-center justify-center text-[#A07855]">
           <span className="btn-icon w-8 h-8 text-white">
-            <span className="text-xs font-bold font-mono text-[#A07855]">{mock ? "SQL" : "EVM"}</span>
+            <span className="text-xs font-bold font-mono text-[#A07855]">
+              {MOCK_MODE ? "⚠" : apiUp === false ? "—" : apiUp === null ? "…" : ledgerType === "local" ? "SQL" : "EVM"}
+            </span>
           </span>
         </div>
       </div>

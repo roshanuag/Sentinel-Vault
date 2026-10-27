@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Shield, Radio, Volume2, VolumeX, Database, WifiOff } from "lucide-react";
 import { setSoundEnabled, playClick } from "../lib/sound";
+import { MOCK_MODE } from "../lib/api";
 
 interface TopBarProps {
   apiUp: boolean | null;
@@ -53,7 +54,7 @@ export const TopBar: React.FC<TopBarProps> = ({ apiUp, mode }) => {
                 </span>
               </div>
               <p className="text-xs text-[#7E756B] font-mono tracking-tight hidden sm:block">
-                Vintage Paper Forensic Ledger · Tamper-Proof Cryptographic Vault
+                Vintage Paper Forensic Ledger · Tamper-Evident Cryptographic Vault
               </p>
             </div>
           </div>
@@ -79,13 +80,18 @@ export const TopBar: React.FC<TopBarProps> = ({ apiUp, mode }) => {
               }`}
             />
             <span className="text-[#7E756B]">API:</span>
-            <span className={apiUp === true ? "text-[#2E7D5B] font-medium" : apiUp === false ? "text-[#B87720] font-medium" : "text-[#857E76] font-medium"}>
-              {apiUp === true ? ":8000 LIVE" : apiUp === false ? "OFFLINE" : "CHECKING"}
+            <span className={MOCK_MODE ? "text-[#BA4A38] font-medium" : apiUp === true ? "text-[#2E7D5B] font-medium" : apiUp === false ? "text-[#B87720] font-medium" : "text-[#857E76] font-medium"}>
+              {MOCK_MODE ? "MOCK" : apiUp === true ? ":8000 LIVE" : apiUp === false ? "OFFLINE" : "CHECKING"}
             </span>
           </div>
 
           {/* Ledger status: read-only, reported by the backend. Never claims a ledger when offline. */}
-          {apiUp === false ? (
+          {MOCK_MODE ? (
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#BA4A38]/10 text-[#BA4A38] border border-[#BA4A38]/30 backdrop-blur-md shadow-xs">
+              <Database className="w-3.5 h-3.5 text-[#BA4A38]" />
+              <span className="font-semibold">MOCK DATA</span>
+            </div>
+          ) : apiUp === false ? (
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#B87720]/10 text-[#B87720] border border-[#B87720]/30 backdrop-blur-md shadow-xs">
               <WifiOff className="w-3.5 h-3.5 text-[#B87720]" />
               <span className="font-semibold">Backend offline</span>

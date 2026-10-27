@@ -17,6 +17,7 @@ interface IntegrityHeroProps {
     missing: number;
     unanchored: number;
   };
+  ledgerType: "local" | "testnet" | "mainnet";
   busy: boolean;
 }
 
@@ -25,6 +26,7 @@ export const IntegrityHero: React.FC<IntegrityHeroProps> = ({
   firstBreak,
   chainBrokenFrom,
   summary,
+  ledgerType,
   busy,
 }) => {
   const isCompromised = verdict === "COMPROMISED";
@@ -126,7 +128,7 @@ export const IntegrityHero: React.FC<IntegrityHeroProps> = ({
                   )}
                 </span>
               ) : isIntact ? (
-                "All 5-minute time windows match anchored immutable ledger hashes."
+                "All 5-minute time windows match the anchored ledger hashes."
               ) : (
                 "No log fingerprints registered yet. Click 'Anchor Logs' to record baseline state."
               )}
@@ -142,10 +144,22 @@ export const IntegrityHero: React.FC<IntegrityHeroProps> = ({
           <span className="text-xs font-mono font-semibold tracking-wide text-[#2A2421] uppercase">
             Forensic Metrics
           </span>
-          <span className="flex items-center gap-1.5 text-[10px] font-mono text-[#2E7D5B] font-semibold px-2 py-0.5 rounded-full bg-[#2E7D5B]/10 border border-[#2E7D5B]/25">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D5B] animate-pulse" />
-            VERIFIED
-          </span>
+          {verdict === "INTACT" ? (
+            <span className="flex items-center gap-1.5 text-[10px] font-mono text-[#2E7D5B] font-semibold px-2 py-0.5 rounded-full bg-[#2E7D5B]/10 border border-[#2E7D5B]/25">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D5B] animate-pulse" />
+              VERIFIED
+            </span>
+          ) : verdict === "COMPROMISED" ? (
+            <span className="flex items-center gap-1.5 text-[10px] font-mono text-[#BA4A38] font-semibold px-2 py-0.5 rounded-full bg-[#BA4A38]/10 border border-[#BA4A38]/25">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#BA4A38] animate-pulse" />
+              COMPROMISED
+            </span>
+          ) : verdict === "NO_ANCHORS" ? (
+            <span className="flex items-center gap-1.5 text-[10px] font-mono text-[#B87720] font-semibold px-2 py-0.5 rounded-full bg-[#B87720]/10 border border-[#B87720]/25">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#B87720]" />
+              NO ANCHORS
+            </span>
+          ) : null}
         </div>
 
         {/* Metric Chips Stack */}
@@ -184,14 +198,14 @@ export const IntegrityHero: React.FC<IntegrityHeroProps> = ({
             </span>
           </div>
 
-          {/* Immutable Ledger */}
+          {/* Ledger type (read-only, reported by the backend) */}
           <div className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-white/70 border border-[#D5CDBD]/60 backdrop-blur-md shadow-2xs">
             <span className="text-[#7E756B] flex items-center gap-2 text-xs font-mono">
               <Lock className="w-4 h-4 text-[#7D6B9C]" />
-              Immutable Ledger
+              {ledgerType === "local" ? "Append-only ledger (local)" : `Anchored ledger (${ledgerType})`}
             </span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wider font-semibold bg-[#7D6B9C]/15 text-[#7D6B9C] border border-[#7D6B9C]/30">
-              APPEND-ONLY
+              {ledgerType === "local" ? "APPEND-ONLY" : ledgerType.toUpperCase()}
             </span>
           </div>
         </div>

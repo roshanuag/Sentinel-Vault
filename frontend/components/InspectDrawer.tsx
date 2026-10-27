@@ -117,7 +117,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
             {/* Anchored Log Hash */}
             <div className="p-3 rounded-xl liquid-glass-inner border border-[#D5CDBD] shadow-sm">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[#7E756B] text-[11px] font-sans">Anchored Log Hash (Immutable Ledger):</span>
+                <span className="text-[#7E756B] text-[11px] font-sans">Anchored Log Hash (append-only ledger):</span>
                 {w.anchored_log_hash && (
                   <button
                     onClick={() => handleCopy(w.anchored_log_hash!, "anchored_hash")}

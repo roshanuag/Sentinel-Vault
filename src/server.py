@@ -79,6 +79,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Security headers on every response. A vault that protects logs should also
+# protect its own API surface. (HSTS only takes effect over HTTPS; harmless on
+# plain HTTP. The CSP uses frame-ancestors only, so the /docs page still loads.)
+SECURITY_HEADERS = {
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Content-Security-Policy": "frame-ancestors 'none'",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "X-Permitted-Cross-Domain-Policies": "none",
+}
+
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    for header, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(header, value)
+    return response
+
 
 # ---- Request models ---------------------------------------------------------
 class AnchorRequest(BaseModel):

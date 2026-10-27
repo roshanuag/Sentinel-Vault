@@ -21,6 +21,7 @@ Previous: Milestone 5 (frontend scaffold) — confirmed working in-browser by th
 - **Frontend scaffold** (`frontend/`): React + Vite + Tailwind v4 dashboard — Header with mode badge, Controls bar (Anchor / Verify / Reset), Tamper panel (window + modify/delete), and a colour-coded forensic timeline. A starting point for Teammate 1 to extend.
 - **`AGENTS.md`**: rules file for the frontend teammate (Codex) — how to run the API, CORS, and pointer to `API_CONTRACT.md`.
 - **Anchor adapter** (`src/anchors.py`): one interface, two interchangeable backends — `LocalAnchor` (SQLite append-only, `mock: true`) and `EvmAnchor` (real EVM smart contract, `mock: false`). Chosen by `LEDGER_BACKEND`. `verify` works identically on either.
+- **Alternative frontend** (`frontend2/`): a premium dark/glassmorphism design iteration (React + Vite + Tailwind v4 + framer-motion + lucide-react), runs on **port 5174**, points at the same API. `frontend/` is untouched. CORS now allows both 5173 and 5174.
 - **Smart contract** (`contracts/LogVault.sol`, compiled to `LogVault.json`): `anchorWindow(windowId, chainHash, timestamp)` — append-only on-chain (a window id can't be overwritten), emits `WindowAnchored`, with read-back getters.
 - **Graceful fallback**: if `LEDGER_BACKEND=testnet` but web3/RPC/key is missing or the node is unreachable, the system logs a warning and falls back to the local ledger — no crash.
 
@@ -116,13 +117,23 @@ python -m uvicorn src.server:app --reload
 - To reuse a deployed contract across restarts, set `CONTRACT_ADDRESS` to the printed address. To anchor to a public testnet instead of ganache, set `RPC_URL` and `PRIVATE_KEY` (a funded key) — same code path.
 - Rebuild the contract artifact (only if you edit the .sol): `pip install py-solc-x && python contracts/build.py`.
 
+### E) Run the alternative frontend (`frontend2/`, design iteration)
+
+Premium dark UI with animations, on **port 5174** (runs alongside `frontend/`).
+```
+cd frontend2
+npm install        # first time only
+npm run dev        # http://localhost:5174
+```
+Backend must be running (it allows CORS from both 5173 and 5174). Verified: `npm install` clean, `npm run build` compiles (2375 modules, no errors), dev server serves on 5174. NOT TESTED by backend owner: the in-browser visuals/animations — open http://localhost:5174 to review.
+
 ## Files
 
 - Backend: `src/collector.py`, `src/ledger.py`, `src/anchors.py`, `src/verifier.py`, `src/tamper.py`, `src/vault.py`, `src/server.py`
 - Contract: `contracts/LogVault.sol`, `contracts/LogVault.json` (compiled artifact), `contracts/build.py`
 - `API_CONTRACT.md`, `AGENTS.md`, `requirements.txt`, `data/sample_auth.log`
-- Frontend: `frontend/` (React + Vite + Tailwind) — `src/App.jsx`, `src/api.js`, `src/components/*`
-- Generated (git-ignored): `data/server.log`, `data/ledger.sqlite`, `data/evm_cache.sqlite`, `frontend/node_modules/`, `frontend/dist/`
+- Frontend: `frontend/` (teammate's, React + Vite + Tailwind). Design iteration: `frontend2/` (adds framer-motion + lucide-react, port 5174).
+- Generated (git-ignored): `data/server.log`, `data/ledger.sqlite`, `data/evm_cache.sqlite`, `frontend*/node_modules/`, `frontend*/dist/`
 
 ## Environment
 

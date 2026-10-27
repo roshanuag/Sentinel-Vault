@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+
+  --bg: #070a12;
+  --bg-2: #0a0f1a;
+  --panel: rgba(18, 24, 37, 0.55);
+  --panel-solid: #0e1420;
+  --border: rgba(130, 150, 180, 0.12);
+  --border-strong: rgba(130, 150, 180, 0.24);
+  --text: #e7edf6;
+  --muted: #8a96a8;
+  --faint: #5a6678;
+
+  --emerald: #22e6a5;
+  --crimson: #ff4d6a;
+  --amber: #f5b13d;
+  --violet: #8b7df6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+  font-feature-settings: "ss01", "zero";
+}
+
+/* Ambient background: deep radial wash + faint technical grid. */
+.app-bg {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 500px at 15% -10%, rgba(34, 230, 165, 0.08), transparent 60%),
+    radial-gradient(800px 600px at 100% 0%, rgba(139, 125, 246, 0.07), transparent 55%),
+    var(--bg);
+}
+
+.app-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(130, 150, 180, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130, 150, 180, 0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 85%);
+  pointer-events: none;
+}
+
+.glass {
+  background: var(--panel);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--border);
+}
+
+.glass-solid {
+  background: linear-gradient(180deg, rgba(20, 27, 41, 0.9), rgba(12, 17, 27, 0.92));
+  border: 1px solid var(--border);
+}
+
+.hairline {
+  border: 1px solid var(--border);
+}
+
+/* Status-driven accents (set --accent per element). */
+.accent-ring {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 0 44px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--emerald) 70%, transparent);
+  outline-offset: 2px;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-120%); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateY(120%); opacity: 0; }
+}
+
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 28%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    transparent
+  );
+  animation: scan 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanline { animation: none; opacity: 0; }
+}
+
+::selection {
+  background: color-mix(in srgb, var(--emerald) 35%, transparent);
+}
+
+/* Accent-aware interactive surfaces (set --accent on the element). */
+.cmd-btn {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.cmd-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 0 30px -12px var(--accent);
+}
+
+.seg {
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.card-hit {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  cursor: pointer;
+}
+.card-hit:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 0 34px -16px var(--accent);
+}

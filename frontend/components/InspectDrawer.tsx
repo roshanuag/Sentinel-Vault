@@ -59,7 +59,7 @@ export const InspectDrawer: React.FC<InspectDrawerProps> = ({ window: w, onClose
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-bold text-[#2A2421] font-serif">
-                  Window {w.window_index} Deep Forensics
+                  Window {w.index ?? w.window_index} Deep Forensics
                 </h3>
                 <span
                   className="text-[11px] font-mono px-2.5 py-0.5 rounded-full liquid-glass-pill font-bold uppercase tracking-wider border"

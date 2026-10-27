@@ -22,7 +22,8 @@ export interface HealthResponse {
 }
 
 export interface WindowObject {
-  window_index: number;
+  index?: number;         // present on POST /api/verify windows
+  window_index?: number;  // present on GET /api/windows
   window_id: string;
   start_time: string;
   end_time: string;
@@ -45,12 +46,13 @@ export interface WindowObject {
 export interface VerifyResponse {
   mock: boolean;
   ledger_type: "local" | "testnet" | "mainnet";
-  overall: "INTACT" | "COMPROMISED" | "NO_ANCHORS";
+  overall_status: "INTACT" | "COMPROMISED" | "NO_ANCHORS";
   summary: {
     intact: number;
     tampered: number;
     missing: number;
     unanchored: number;
+    ledger_tampered: number;
   };
   first_break: {
     index: number;
@@ -177,12 +179,12 @@ class MockEngine {
       return {
         mock: this.mode.mock,
         ledger_type: this.mode.ledger_type,
-        overall: "NO_ANCHORS",
-        summary: { intact: 0, tampered: 0, missing: 0, unanchored: INITIAL_WINDOWS.length },
+        overall_status: "NO_ANCHORS",
+        summary: { intact: 0, tampered: 0, missing: 0, unanchored: INITIAL_WINDOWS.length, ledger_tampered: 0 },
         first_break: null,
         chain_broken_from: null,
         windows: INITIAL_WINDOWS.map((w) => ({
-          window_index: w.window_index,
+          index: w.window_index,
           window_id: w.window_id,
           start_time: w.start_time,
           end_time: w.end_time,
@@ -211,7 +213,7 @@ class MockEngine {
       if (!currentLines || currentLines.length === 0) {
         missing++;
         const obj: WindowObject = {
-          window_index: w.window_index,
+          index: w.window_index,
           window_id: w.window_id,
           start_time: w.start_time,
           end_time: w.end_time,
@@ -270,7 +272,7 @@ class MockEngine {
       }
 
       verifiedWindows.push({
-        window_index: w.window_index,
+        index: w.window_index,
         window_id: w.window_id,
         start_time: w.start_time,
         end_time: w.end_time,
@@ -296,8 +298,8 @@ class MockEngine {
     return {
       mock: this.mode.mock,
       ledger_type: this.mode.ledger_type,
-      overall,
-      summary: { intact, tampered, missing, unanchored },
+      overall_status: overall,
+      summary: { intact, tampered, missing, unanchored, ledger_tampered: 0 },
       first_break: firstBreak,
       chain_broken_from: chainBrokenFrom,
       windows: verifiedWindows,
@@ -393,7 +395,12 @@ export const api = {
   async windows(): Promise<{ mock: boolean; ledger_type: string; windows: WindowObject[] }> {
     if (MOCK_MODE) {
       const v = await mockEngine.verify();
-      return { mock: v.mock, ledger_type: v.ledger_type, windows: v.windows };
+      // GET /api/windows uses window_index; map verify's index onto it.
+      return {
+        mock: v.mock,
+        ledger_type: v.ledger_type,
+        windows: v.windows.map((w) => ({ ...w, window_index: w.index })),
+      };
     }
     let res: Response;
     try {
@@ -411,14 +418,16 @@ export const api = {
   /**
    * Anchor logs: POST /api/anchor
    */
-  async anchor(): Promise<{ mock: boolean; ledger_type: string; count: number; windows?: WindowObject[] }> {
+  async anchor(): Promise<{ mock: boolean; ledger_type: string; newly_anchored: number; already_anchored?: number; total_windows: number; chain_tip?: string; windows?: WindowObject[] }> {
     if (MOCK_MODE) {
       mockEngine.anchored = true;
       await mockEngine.computeAnchors();
       return {
         mock: mockEngine.mode.mock,
         ledger_type: mockEngine.mode.ledger_type,
-        count: INITIAL_WINDOWS.length,
+        newly_anchored: INITIAL_WINDOWS.length,
+        already_anchored: 0,
+        total_windows: INITIAL_WINDOWS.length,
       };
     }
     let res: Response;

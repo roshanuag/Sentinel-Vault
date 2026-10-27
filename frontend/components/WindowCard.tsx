@@ -59,7 +59,7 @@ export const WindowCard: React.FC<WindowCardProps> = ({
           {/* Window Index & Time Range */}
           <div className="flex items-center gap-2.5">
             <span className="flex items-center justify-center w-7 h-7 rounded-full liquid-glass-btn text-xs font-mono font-bold text-[#A07855]">
-              #{w.window_index}
+              #{w.index ?? w.window_index}
             </span>
             <div>
               <div className="flex items-center gap-1.5 text-xs text-[#7E756B] font-mono">

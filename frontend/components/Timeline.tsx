@@ -117,7 +117,7 @@ export const Timeline: React.FC<TimelineProps> = ({
           filteredWindows.map((w, idx) => {
             const isBroken = w.status === "TAMPERED" || w.status === "MISSING";
             return (
-              <React.Fragment key={w.window_id || w.window_index}>
+              <React.Fragment key={w.window_id || (w.index ?? w.window_index)}>
                 {/* Cryptographic Linkage Connector between consecutive items */}
                 {idx > 0 && (
                   <ChainConnector
@@ -130,7 +130,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                 <WindowCard
                   window={w}
                   onSelect={onSelectWindow}
-                  isSelected={selectedWindow?.window_index === w.window_index}
+                  isSelected={(selectedWindow?.index ?? selectedWindow?.window_index) === (w.index ?? w.window_index)}
                 />
               </React.Fragment>
             );

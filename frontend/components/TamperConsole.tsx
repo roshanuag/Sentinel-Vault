@@ -74,8 +74,8 @@ export const TamperConsole: React.FC<TamperConsoleProps> = ({
           >
             {windows.length > 0 ? (
               windows.map((w) => (
-                <option key={w.window_index} value={w.window_index}>
-                  Window {w.window_index} ({w.start_time ? new Date(w.start_time).toLocaleTimeString([], { hour12: false }) : "10:00"} – {w.end_time ? new Date(w.end_time).toLocaleTimeString([], { hour12: false }) : "10:05"})
+                <option key={w.index ?? w.window_index} value={w.index ?? w.window_index}>
+                  Window {w.index ?? w.window_index} ({w.start_time ? new Date(w.start_time).toLocaleTimeString([], { hour12: false }) : "10:00"} – {w.end_time ? new Date(w.end_time).toLocaleTimeString([], { hour12: false }) : "10:05"})
                 </option>
               ))
             ) : (

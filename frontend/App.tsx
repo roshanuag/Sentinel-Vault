@@ -23,7 +23,7 @@ export default function App() {
 
   // Verification & Forensic State
   const [overall, setOverall] = useState<"INTACT" | "COMPROMISED" | "NO_ANCHORS" | null>(null);
-  const [summary, setSummary] = useState({ intact: 0, tampered: 0, missing: 0, unanchored: 0 });
+  const [summary, setSummary] = useState({ intact: 0, tampered: 0, missing: 0, unanchored: 0, ledger_tampered: 0 });
   const [firstBreak, setFirstBreak] = useState<VerifyResponse["first_break"]>(null);
   const [chainBrokenFrom, setChainBrokenFrom] = useState<string | null>(null);
   const [windows, setWindows] = useState<WindowObject[]>([]);
@@ -97,16 +97,16 @@ export default function App() {
 
   // Apply verify payload to state
   const applyVerifyData = useCallback((data: VerifyResponse) => {
-    setOverall(data.overall);
+    setOverall(data.overall_status);
     setSummary(data.summary);
     setFirstBreak(data.first_break);
     setChainBrokenFrom(data.chain_broken_from);
     setWindows(data.windows || []);
     setMode({ mock: data.mock, ledger_type: data.ledger_type });
 
-    if (data.overall === "COMPROMISED") {
+    if (data.overall_status === "COMPROMISED") {
       playAlarm();
-    } else if (data.overall === "INTACT") {
+    } else if (data.overall_status === "INTACT") {
       playSuccess();
     }
   }, []);
@@ -142,7 +142,7 @@ export default function App() {
     setMessage("Computing SHA-256 fingerprints and anchoring to append-only ledger...");
     try {
       const res = await api.anchor();
-      setMessage(`Successfully anchored ${res.count || 3} time windows to ${mode.mock ? "Local SQLite (Triggers)" : "EVM Blockchain"}.`);
+      setMessage(`Successfully anchored ${res.newly_anchored} new time windows (total ${res.total_windows}) to ${mode.mock ? "Local SQLite (Triggers)" : "EVM Blockchain"}.`);
       playSuccess();
       const verifyData = await api.verify();
       applyVerifyData(verifyData);
@@ -163,9 +163,9 @@ export default function App() {
     try {
       const verifyData = await api.verify();
       applyVerifyData(verifyData);
-      if (verifyData.overall === "INTACT") {
+      if (verifyData.overall_status === "INTACT") {
         setMessage("All 5-minute time windows verified intact against immutable ledger.");
-      } else if (verifyData.overall === "COMPROMISED") {
+      } else if (verifyData.overall_status === "COMPROMISED") {
         setMessage(`TAMPERING DETECTED at Window ${verifyData.first_break?.index}: ${verifyData.first_break?.detail}`);
       } else {
         setMessage("Vault unanchored. Baseline anchors not registered.");

@@ -4,9 +4,10 @@ A plain-but-technical walkthrough of *how* the backend works and *why* we built 
 this way. Read this before facing the judges; the "why" lines are written so you
 can say them almost verbatim.
 
-**One-sentence pitch:** SentinelVault proves your logs are the ones originally
-written — and pinpoints exactly which five-minute window was changed — even when
-the attacker has full root access to the log server.
+**One-sentence pitch:** SentinelVault fingerprints every five-minute window of your
+logs and chains them together, so any edit or deletion is caught and pinpointed to
+the exact window, and it's designed to anchor those fingerprints on a public
+blockchain, beyond even a root attacker's reach.
 
 ---
 
@@ -59,11 +60,15 @@ between them; the verifier works identically either way.
 
 - Stores one row per window (fingerprint, previous hash, timestamp).
 - It's **append-only**: the database has triggers that *reject* `UPDATE` and
-  `DELETE` on anchored rows. Try to alter a fingerprint in SQL and it errors out.
-- **Honest weakness:** a root attacker can't edit a row... but they *can* delete
-  the whole database file. So the local ledger simulates immutability — great for
-  an offline demo, but it isn't a guarantee against root. We label it `mock: true`
-  so we never oversell it.
+  `DELETE` on anchored rows. Try to alter a fingerprint through normal SQL and it
+  errors out.
+- **Honest weakness:** those triggers only stop *normal* SQL. A **root attacker can
+  bypass them** — drop the triggers and rewrite rows directly, or just delete the
+  whole database file. Everything on the box is within root's reach. Our verifier's
+  self-check (Section 3) catches *partial* edits, but a root user who re-chains the
+  entire ledger can produce a consistent fake that local mode cannot detect. So
+  local mode is strong **tamper-evidence**, not a guarantee against root — which is
+  exactly why we label it `mock: true` and never oversell it.
 
 **EVM Smart Contract anchor (`mock: false`, `contracts/LogVault.sol`):**
 
@@ -71,26 +76,32 @@ between them; the verifier works identically either way.
   `anchorWindow(windowId, chainHash, timestamp)`. It stores the fingerprint in a
   mapping, **emits an event**, and has `require(!exists)` so a window id can be
   written **once and never overwritten** — append-only *on-chain*.
-- **Why root access can't wipe the history (the winning point):**
-  - The blockchain is an **independent, distributed ledger** running on nodes the
-    attacker doesn't control. Our log server is just a *client* that submits a hash.
+- **Where the real root-resistance comes from — a *public* network:**
+  - On a public blockchain the ledger runs on **independent nodes the attacker
+    doesn't control**. Our log server is just a *client* that submits a hash.
   - There is **no admin/root override** on a public chain — no "delete row," no
     "drop table." Immutability is enforced by consensus across many machines.
-  - The fingerprint is **replicated** across the network the moment it's mined. To
-    erase it, an attacker would have to rewrite the blockchain itself — not the one
-    server they compromised.
-  - So even if they `rm -rf` the log server *and* its local database, the on-chain
-    fingerprints survive and still prove the logs were altered.
-- We tested this locally on a **ganache** EVM chain; the identical code works
-  against a public testnet (Polygon Amoy / Sepolia) by setting `RPC_URL` and a
-  funded `PRIVATE_KEY`.
+  - Each fingerprint is **replicated** across the network once mined. To erase it,
+    an attacker would have to rewrite the public chain itself — not the one server
+    they compromised. *That* is what survives a root attacker who wipes or re-chains
+    the local database.
+- **Honesty — what we've actually run:** we've run the full EVM path (deploy →
+  anchor → read-back → append-only revert → verify) against a **local ganache chain
+  only**. We have **not** run it against a public testnet (Polygon Amoy / Sepolia)
+  yet. And a ganache node runs **on the same machine**, so it is **not** independent
+  of root — root could tamper with its state too. So our *tested* EVM setup proves
+  the mechanism and the API, but the root-proof guarantee specifically needs a
+  public network: that path is wired (set `RPC_URL` + a funded `PRIVATE_KEY`) but
+  not yet exercised.
 - **Graceful fallback:** if testnet mode is selected but the chain is unreachable
   (no network, bad key), the system logs a warning and falls back to the local
   ledger instead of crashing.
 
-> **Say it like this:** "The local ledger stops edits; the blockchain stops
-> deletion. On-chain, there's no root user and no delete button — the record lives
-> on machines the attacker will never touch."
+> **Say it like this:** "Locally, the chained fingerprints make tampering *evident*
+> — but a root attacker owns the box, so the real guarantee is anchoring to a
+> *public* blockchain with no root user and no delete button. We've built and
+> tested that path on a local chain; running it on a public testnet is the next
+> step."
 
 ---
 
@@ -106,10 +117,21 @@ between them; the verifier works identically either way.
   - **TAMPERED** — the window still exists but its fingerprint changed.
   - **MISSING** — the window is anchored but gone from the current logs.
   - **UNANCHORED** — newer logs that were never anchored yet.
+  - **LEDGER_TAMPERED** — the anchored *record itself* was altered (its stored hash
+    is internally inconsistent, or the chain link to the previous window is broken).
 - It **pinpoints the first break** (window index + timestamp) so an investigator
   knows exactly where to look, and it even guesses *modified vs. deleted* by
   comparing line counts (same count + different hash = an edit; fewer lines = a
   deletion).
+- It runs a **ledger self-check**: each stored row's `chain_hash` is recomputed from
+  its own fields, and each row's `prev_hash` must equal the previous row's
+  `chain_hash` (row 0 → the all-zero genesis). A partially-edited row — even one
+  whose own `chain_hash` was recomputed — breaks the link to the next row and is
+  flagged `LEDGER_TAMPERED`. (Honest caveat: a *full* re-chain of the whole local
+  ledger still passes locally; only a public-chain anchor defeats that.)
+- The first time a window is flagged, it records **`first_noticed_at`** (set once,
+  never overwritten, cleared on reset) — the "when the change was first noticed"
+  that the problem statement asks for.
 
 **Why it "mathematically" catches a changed line:**
 
@@ -121,8 +143,8 @@ between them; the verifier works identically either way.
 
 **SOC alerting (incident response):**
 
-- The moment verification finds a TAMPERED or MISSING window, the verifier emits a
-  console alert per window:
+- The moment verification finds a TAMPERED, MISSING, or LEDGER_TAMPERED window, the
+  verifier emits a console alert per window:
   `[SOC ALERT] CRITICAL: TAMPERED detected in Window 0 (…). Mock webhook fired to Security Team.`
 - **Why:** detection is only half of security — a real **Security Operations
   Center** needs to be *notified* so a human can respond. We simulate that webhook
@@ -178,15 +200,16 @@ FastAPI service itself (defense in depth):
 **GitHub Actions CI (`.github/workflows/ci.yml`):**
 
 - On **every push and pull request to `main`**, a fresh Ubuntu + Python 3.13
-  runner installs our dependencies and runs the full **pytest** suite (18 tests:
-  the hashing engine, the append-only ledger, the verifier, and the API's auth /
-  rate-limit / header behaviour).
+  runner installs our dependencies and runs the full **pytest** suite (21 tests:
+  the hashing engine, the append-only ledger, the verifier — including the ledger
+  self-check and `first_noticed_at` — and the API's auth / rate-limit / header
+  behaviour).
 - **Why:** it proves the code actually works, continuously, on a clean machine —
   not just "on my laptop." A green CI badge is credibility: it says every change
   is automatically tested and nothing merged to `main` is broken.
 
 > **Say it like this:** "One command to run it anywhere via Docker, and a CI
-> pipeline that re-runs all 18 tests on every push — so what you see in the demo is
+> pipeline that re-runs all 21 tests on every push — so what you see in the demo is
 > what's actually verified, on a clean machine, every time."
 
 ---
@@ -194,8 +217,13 @@ FastAPI service itself (defense in depth):
 ## Bonus — likely judge questions (and honest answers)
 
 - **"Isn't a local hash chain pointless if root can recompute it?"**
-  Exactly why we have the **EVM anchor**. The local chain stops in-place edits; the
-  blockchain stops deletion because it's independent of the compromised server.
+  Fair point, and we're upfront about it. Locally, the chain makes tampering
+  *evident* and the self-check catches partial edits — but a root attacker can
+  disable the triggers and re-chain the whole ledger, so local mode is
+  tamper-evidence, not a root-proof guarantee. The actual root-resistance comes from
+  anchoring to a **public** blockchain, where the record lives on nodes the attacker
+  doesn't control. We've built and tested that path on a local chain; running it
+  against a public testnet is the next step.
 
 - **"What if the attacker compromises the box *before* you collect the logs?"**
   Then the corrupted log becomes our baseline — we detect tampering *after*
@@ -208,9 +236,11 @@ FastAPI service itself (defense in depth):
   proofs (in README → Future Enhancements).
 
 - **"Is the blockchain part real or a mock?"**
-  Real contract, real EVM. We demo on a local ganache chain (offline, no gas), and
-  the same code runs on a public testnet. The local SQLite mode is clearly labelled
-  `mock: true`; the chain mode is `mock: false`. We never present one as the other.
+  Real contract, real EVM execution — deploy, anchor, read-back, and the
+  append-only revert all genuinely run. Honestly though: we've only run it against a
+  **local ganache chain**, not a public testnet yet. Local SQLite mode is labelled
+  `mock: true`; EVM mode is `mock: false`. We never present one as the other, and we
+  don't claim a public-chain deployment we haven't done.
 
 - **"Why five-minute windows?"**
   A trade-off: smaller windows catch tampering sooner but cost more anchor

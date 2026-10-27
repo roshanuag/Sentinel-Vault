@@ -23,13 +23,13 @@ After a breach, attackers (or a malicious insider with admin rights) often **edi
 ## Architecture
 
 ```mermaid
-flowchart TD
-    A[Logs] --> B[Split into 5-minute windows]
-    B --> C[SHA-256 fingerprint per window]
-    C --> D[Hash chain<br/>each fingerprint includes the previous one]
-    D --> E[Ledger<br/>local SQLite append-only<br/>EVM contract: tested on local chain only]
-    E --> F[Verify: re-read log, re-fingerprint, compare]
-    F --> G[Per-window status<br/>INTACT / TAMPERED / MISSING / LEDGER_TAMPERED]
+flowchart LR
+    A[Logs] --> B[5-min windows]
+    B --> C[SHA-256 per window]
+    C --> D[Hash chain]
+    D --> E[Ledger<br/>SQLite; EVM tested locally only]
+    E --> F[Verify]
+    F --> G[Status: INTACT / TAMPERED / MISSING / LEDGER_TAMPERED]
     G --> H[Dashboard]
 ```
 

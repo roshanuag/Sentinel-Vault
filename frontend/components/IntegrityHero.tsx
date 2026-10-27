@@ -1,6 +1,7 @@
 import React from "react";
-import { ShieldCheck, ShieldAlert, AlertTriangle, Fingerprint, Lock, Activity } from "lucide-react";
+import { ShieldCheck, ShieldAlert, AlertTriangle, Fingerprint, Lock, Activity, FileX } from "lucide-react";
 import { IntegrityVerdict } from "../lib/ui";
+import { WindowObject } from "../lib/api";
 
 interface IntegrityHeroProps {
   verdict: IntegrityVerdict | null;
@@ -18,6 +19,7 @@ interface IntegrityHeroProps {
     unanchored: number;
     ledger_tampered: number;
   };
+  windows: WindowObject[];
   ledgerType: "local" | "testnet" | "mainnet";
   busy: boolean;
 }
@@ -27,11 +29,21 @@ export const IntegrityHero: React.FC<IntegrityHeroProps> = ({
   firstBreak,
   chainBrokenFrom,
   summary,
+  windows,
   ledgerType,
   busy,
 }) => {
   const isCompromised = verdict === "COMPROMISED";
   const isIntact = verdict === "INTACT";
+
+  // Every window the verify flagged as compromised (not just the first break),
+  // so the headline can name them all. UNANCHORED is not a compromise.
+  const compromisedWindows = windows.filter(
+    (w) =>
+      w.status === "TAMPERED" ||
+      w.status === "MISSING" ||
+      w.status === "LEDGER_TAMPERED"
+  );
 
   return (
     <div className="flex flex-col lg:flex-row items-stretch gap-4 sm:gap-5">
@@ -121,6 +133,14 @@ export const IntegrityHero: React.FC<IntegrityHeroProps> = ({
             <p className="mt-1 text-xs sm:text-sm text-[#7E756B] max-w-xl font-sans leading-relaxed">
               {isCompromised && firstBreak ? (
                 <span className="text-[#BA4A38] font-medium">
+                  {compromisedWindows.length > 1 && (
+                    <span className="block mb-1 font-semibold">
+                      {compromisedWindows.length} windows compromised:{" "}
+                      {compromisedWindows
+                        .map((w) => `Window ${w.index ?? w.window_index} ${w.status}`)
+                        .join(", ")}
+                    </span>
+                  )}
                   Window {firstBreak.index} compromised: {firstBreak.detail}
                   {chainBrokenFrom && (
                     <span className="block text-xs mt-1 text-[#BA4A38]/80 font-mono">
@@ -196,6 +216,29 @@ export const IntegrityHero: React.FC<IntegrityHeroProps> = ({
               }`}
             >
               {summary.tampered}
+            </span>
+          </div>
+
+          {/* Missing */}
+          <div
+            className={`flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl border backdrop-blur-md transition-all shadow-2xs ${
+              summary.missing > 0
+                ? "bg-[#857E76]/10 border-[#857E76]/40 text-[#857E76]"
+                : "bg-white/70 border-[#D5CDBD]/60 text-[#7E756B]"
+            }`}
+          >
+            <span className="flex items-center gap-2 text-xs font-mono">
+              <FileX className={`w-4 h-4 ${summary.missing > 0 ? "text-[#857E76]" : "text-[#7E756B]"}`} />
+              Missing
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${
+                summary.missing > 0
+                  ? "bg-[#857E76]/20 text-[#857E76] border border-[#857E76]/40"
+                  : "bg-black/[0.05] text-[#2A2421] border border-[#D5CDBD]/60"
+              }`}
+            >
+              {summary.missing}
             </span>
           </div>
 

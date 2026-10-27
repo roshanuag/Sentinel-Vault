@@ -431,6 +431,7 @@ export default function App() {
             firstBreak={firstBreak}
             chainBrokenFrom={chainBrokenFrom}
             summary={summary}
+            windows={windows}
             ledgerType={mode.ledger_type}
             busy={busy !== null}
           />
@@ -442,6 +443,18 @@ export default function App() {
             firstBreak={firstBreak}
             ledgerType={mode.ledger_type}
             apiUp={apiUp}
+            onInspectFirstBreak={() => {
+              if (!firstBreak) return;
+              const w = windows.find(
+                (x) => (x.index ?? x.window_index) === firstBreak.index
+              );
+              if (w) setSelectedWindow(w);
+            }}
+            onViewTimeline={() =>
+              document
+                .getElementById("cryptographic-timeline")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
           />
 
           {/* 3. CommandBar: Primary Action Buttons ([Anchor], [Verify], [Reset Demo]) */}
@@ -463,11 +476,13 @@ export default function App() {
           />
 
           {/* 5. Cryptographic Timeline with chained cards & connectors */}
-          <Timeline
-            windows={windows}
-            onSelectWindow={(w) => setSelectedWindow(w)}
-            selectedWindow={selectedWindow}
-          />
+          <div id="cryptographic-timeline" className="scroll-mt-6">
+            <Timeline
+              windows={windows}
+              onSelectWindow={(w) => setSelectedWindow(w)}
+              selectedWindow={selectedWindow}
+            />
+          </div>
 
           {/* Forensic Deep Inspection Drawer */}
           <InspectDrawer

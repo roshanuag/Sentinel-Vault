@@ -207,6 +207,12 @@ Per the hackathon's transparency rules:
 - The frontend is owned and developed by a teammate using their own AI assistant.
 - All AI-assisted work was reviewed and tested by the team before inclusion.
 
+## Future enhancements
+
+- **Merkle trees per window** — instead of hashing a window as one blob, build a Merkle tree over its log lines and anchor the root. This gives **single-line cryptographic proofs**: you could prove one specific line is authentic (or pinpoint exactly which line changed) without revealing or re-hashing the whole window.
+- **HSM-backed key management** — for the EVM anchor and any signing, hold keys in a **Hardware Security Module** (or a cloud KMS/HSM) so the anchoring key is never exposed on the host, meeting enterprise key-management and compliance requirements.
+- **Threat model** — see [`THREAT_MODEL.md`](THREAT_MODEL.md) for assumed attacker capabilities, mitigations, and honest limitations.
+
 ## License
 
 The Solidity contract carries an MIT SPDX header; the project code is intended under the MIT license.

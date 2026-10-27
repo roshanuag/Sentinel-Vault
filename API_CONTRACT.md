@@ -21,6 +21,25 @@ Common fields:
 
 ---
 
+## GET /api/health
+
+Quick "is the server up, and which backend is it using?" check. No auth, no request body.
+
+**Request:** none.
+
+**Response 200:**
+```json
+{
+  "status": "ok",
+  "mock": true,
+  "ledger_type": "local"
+}
+```
+- `status` is always `"ok"` when the server responds.
+- `mock` / `ledger_type` reflect the active backend: `true` / `"local"` for the append-only SQLite ledger, `false` / `"testnet"` for the EVM backend.
+
+---
+
 ## GET /api/windows
 
 Return everything currently anchored in the ledger (does **not** re-read logs).

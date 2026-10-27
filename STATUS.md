@@ -1,17 +1,18 @@
 # STATUS
 
 **Project:** Tamper-Proof Security Log Vault (Graphite 26, PS9, Cybersecurity track)
-**One line:** Store fingerprints (hashes) of logs so any later deletion/edit is detectable, even by an admin, and show exactly which time window changed.
+**One line:** Store fingerprints (hashes) of logs so any later deletion/edit is detectable, after the fingerprints are anchored, and show exactly which time window changed.
 
-This repository is **backend-only**. The frontend is a separate project built by
-the frontend teammate; it integrates over the HTTP API (see `API_CONTRACT.md` and
-`AGENTS.md`).
+This repository contains the **backend** plus a **React dashboard** (in `frontend/`)
+that is now wired to the **real backend** over the HTTP API (see `API_CONTRACT.md`
+and `AGENTS.md`). The dashboard was originally built as a separate project by the
+frontend teammate.
 
 ## Current status
 
 **Backend is feature-complete, hardened, and tested.** Pipeline: collector →
 chained SHA-256 hashing → append-only SQLite ledger **or** on-chain EVM anchor →
-verifier (+ SOC alerts) → hardened FastAPI. 21 passing tests; CI green.
+verifier (+ SOC alerts) → hardened FastAPI. 24 passing tests; CI green.
 
 ## What works (real, not mock)
 
@@ -28,7 +29,7 @@ verifier (+ SOC alerts) → hardened FastAPI. 21 passing tests; CI green.
 - **SOC-grade hardening**: `X-API-Key` required on all POST endpoints (`VAULT_API_KEY`, default `demo-key-123`); rate limiting (429) on `/api/anchor` and `/api/tamper-demo` (10/min/IP); security headers on every response (HSTS, nosniff, X-Frame-Options DENY, CSP frame-ancestors, Referrer/Permissions).
 - **DevOps**: `Dockerfile` (python:3.13-slim, non-root) + `docker-compose.yml` (`docker compose up --build`); GitHub Actions CI (`.github/workflows/ci.yml`) runs pytest on push/PR to main.
 - **Docs**: `README.md`, `DEMO_SCRIPT.md`, `THREAT_MODEL.md`, `API_CONTRACT.md` (contract for the frontend), `AGENTS.md` (frontend-integration rules).
-- **Tests** (`tests/`): **21 passing** — engine (windowing, chaining, ledger, verifier incl. first_noticed_at and ledger self-check) + HTTP API (auth, rate limit, headers, flow).
+- **Tests** (`tests/`): **24 passing** — engine (windowing, chaining, ledger, verifier incl. first_noticed_at and ledger self-check) + HTTP API (auth, rate limit, headers, flow).
 
 ### Proof actually run
 - Clean verify → `INTACT` (3/3 windows match).
@@ -41,8 +42,25 @@ verifier (+ SOC alerts) → hardened FastAPI. 21 passing tests; CI green.
 ## What is REAL vs SIMULATED (mock honesty)
 
 - **REAL:** hashing, chaining, windowing, verification, append-only DB triggers.
-- **Local backend (mock: true):** the "cannot ever be changed" guarantee is *simulated* — the local SQLite file could still be deleted by someone with full server access. This is the offline demo default.
-- **EVM backend (mock: false):** the per-window `chainHash` is anchored on a real EVM smart contract (append-only on-chain), so that fingerprint is genuinely immutable and independent of the server. Honest nuance: the per-window log metadata used for the detailed diagnostic is cached locally; the on-chain `chainHash` is the root of trust. Tested on a local ganache chain; the same code path works against a public testnet with `RPC_URL` + `PRIVATE_KEY`.
+- **Local backend (mock: true):** the "cannot ever be changed" guarantee is *simulated* — someone with full server access could still delete the local SQLite file, or rewrite the ledger itself. This is the offline demo default.
+- **EVM backend (mock: false):** the per-window `chainHash` is anchored on a real EVM smart contract (append-only on-chain), so that fingerprint cannot be overwritten by the contract; on a public chain it would be independent of the server. Honest nuance: the per-window log metadata used for the detailed diagnostic is cached locally; the on-chain `chainHash` is the root of trust. Tested on a local ganache chain; designed to run on a public testnet with `RPC_URL` + `PRIVATE_KEY`, but not yet run there; ganache runs on the same machine, so it is not independent of root.
+
+## Frontend (dashboard)
+
+The React dashboard in `frontend/` is **connected to the real backend** (not the
+mock engine): it calls `http://localhost:8000` and renders the live anchor / verify /
+tamper results. Run it with `cd frontend && npm install && npm run dev`, then open
+`http://localhost:5173`. Mock mode (`VITE_MOCK_MODE=true`) is an offline-fallback only
+and is **off** for the real demo.
+
+### Tested end to end (by the team)
+- **Fresh restart** — stop everything, start backend then frontend, and the core flow still works.
+- **Full attack story** — anchor → verify INTACT → modify / delete line / delete whole window → verify catches each case.
+- **Deleted-window display** — a deleted window is shown honestly (no fallback to the old anchored values).
+- **Reset repeatability** — `reset-demo` returns to a clean state and the whole flow can be re-run.
+- **Backend-offline error** — with the backend stopped, the dashboard shows a visible error instead of fake data.
+- **No-internet run** — the full local stack runs with no internet access.
+- **Backend test suite** — 24 backend tests pass (`python -m pytest -q`).
 
 ## How to run / check it
 

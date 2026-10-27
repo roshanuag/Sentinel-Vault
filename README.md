@@ -62,6 +62,30 @@ Expected: **24 passed**.
 
 ---
 
+## Run the dashboard (frontend)
+
+The repo also ships a React dashboard (in `frontend/`) that talks to the backend above. **Start the backend first** (so it is listening on `http://localhost:8000`), then in a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173** in your browser.
+
+- By default the dashboard calls the real backend at `http://localhost:8000` (override with `VITE_API_BASE`).
+- **`VITE_MOCK_MODE` must stay off for the real demo.** It is off by default. If it is set to `true`, the dashboard simulates everything in the browser and shows a bright `⚠ MOCK DATA — NOT the real backend` banner. That mode is an offline fallback only — never use it for the real demo.
+
+**What the dashboard shows:**
+- **Attack console** — run the three attacker actions against a chosen window: *modify* a line, *delete* a line, or *delete the whole window*.
+- **Inspector** — per window, the **anchored hash vs the current hash** side by side, the **originally recorded** time (when the window was anchored) and the **first noticed** time (when tampering was first detected), and the window's status.
+- **Siren** — a ~3-second alert siren plays when verify detects tampering; muting stops it and it never overlaps itself.
+
+> Tested by the team after a fresh restart; see `STATUS.md`.
+
+---
+
 ## Demo steps (local mode)
 
 You can drive the demo from the browser at **/docs**, from `curl`, or from the CLI. The flow:

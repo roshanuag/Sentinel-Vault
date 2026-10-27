@@ -137,6 +137,17 @@ def verify(log_path, anchor, window_seconds=DEFAULT_WINDOW_SECONDS):
     compromised = summary["tampered"] > 0 or summary["missing"] > 0
     overall_status = "COMPROMISED" if compromised else "INTACT"
 
+    # Simulated SOC incident-response alerting: log each tampered/missing window
+    # to the console as a mock webhook to the security team.
+    if compromised:
+        for w in result_windows:
+            if w["status"] in ("TAMPERED", "MISSING"):
+                print(
+                    f"[SOC ALERT] CRITICAL: {w['status']} detected in Window "
+                    f"{w['index']} ({w['start_time']}). "
+                    f"Mock webhook fired to Security Team."
+                )
+
     return {
         **base,
         "overall_status": overall_status,

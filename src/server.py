@@ -166,7 +166,7 @@ class VerifyRequest(BaseModel):
 
 
 class TamperRequest(BaseModel):
-    log_path: Optional[str] = None
+    # No log_path: this endpoint only ever touches the server's configured LOG_PATH.
     window_index: int
     action: str
 
@@ -228,13 +228,13 @@ def post_verify(req: VerifyRequest = VerifyRequest()):
 
 @app.post("/api/tamper-demo", dependencies=[Depends(require_api_key), Depends(rate_limit_tamper)])
 def post_tamper(req: TamperRequest):
-    log_path = req.log_path or LOG_PATH
+    # Always the configured demo log - never a caller-supplied path.
     try:
         return tamper.tamper_line(
-            log_path, req.window_index, req.action, window_seconds=WINDOW_SECONDS
+            LOG_PATH, req.window_index, req.action, window_seconds=WINDOW_SECONDS
         )
     except FileNotFoundError:
-        return _error(400, f"log file not found: {log_path!r}")
+        return _error(400, f"log file not found: {LOG_PATH!r}")
     except (ValueError, IndexError) as exc:
         return _error(400, str(exc))
 

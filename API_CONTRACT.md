@@ -144,10 +144,11 @@ Simulate an attacker editing or deleting a line inside a target window, so judge
 
 **Request body:**
 ```json
-{ "log_path": "data/server.log", "window_index": 0, "action": "modify" }
+{ "window_index": 0, "action": "modify" }
 ```
 - `window_index` (required): `0` = first window.
 - `action` (required): `"modify"` (change a line) or `"delete"` (remove a line).
+- For safety this endpoint **only ever modifies the server's configured log** (`LOG_PATH`). It takes **no** `log_path`; any `log_path` sent in the body is ignored.
 
 **Response 200:**
 ```json

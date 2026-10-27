@@ -79,3 +79,28 @@ def test_rate_limit_returns_429(client):
     assert codes[:limit] == [200] * limit
     assert codes[limit] == 429
     assert "error" in client.post("/api/anchor", headers=KEY).json()
+
+
+def test_tamper_demo_ignores_log_path_and_only_touches_demo_log(client, tmp_path):
+    # A canary file an attacker tries to target by smuggling in a log_path.
+    canary = tmp_path / "canary.log"
+    canary.write_text(
+        "2026-10-27 10:00:01 server sshd[1]: do not touch this file\n", encoding="utf-8"
+    )
+    canary_before = canary.read_text(encoding="utf-8")
+    with open(server.LOG_PATH, encoding="utf-8") as fh:
+        demo_before = fh.read()
+
+    # The request still sends a different log_path (pointing at the canary).
+    r = client.post(
+        "/api/tamper-demo",
+        headers=KEY,
+        json={"log_path": str(canary), "window_index": 0, "action": "delete"},
+    )
+    assert r.status_code == 200
+
+    # The attacker-supplied log_path is ignored: the canary is untouched ...
+    assert canary.read_text(encoding="utf-8") == canary_before
+    # ... and the server's own demo log (LOG_PATH) is what actually changed.
+    with open(server.LOG_PATH, encoding="utf-8") as fh:
+        assert fh.read() != demo_before

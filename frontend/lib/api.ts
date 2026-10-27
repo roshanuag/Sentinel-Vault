@@ -74,6 +74,8 @@ export interface TamperResponse {
 
 const API_BASE = (import.meta as unknown as { env?: { VITE_API_BASE?: string } })?.env?.VITE_API_BASE || "http://localhost:8000";
 const API_KEY = (import.meta as unknown as { env?: { VITE_API_KEY?: string } })?.env?.VITE_API_KEY || "demo-key-123";
+// MockEngine is used ONLY when this is true. Otherwise backend failures surface as real errors.
+export const MOCK_MODE = (import.meta as unknown as { env?: { VITE_MOCK_MODE?: string } })?.env?.VITE_MOCK_MODE === "true";
 
 // --- CLIENT-SIDE CRYPTOGRAPHIC SIMULATOR (for offline / instant demo) ---
 
@@ -350,6 +352,18 @@ export const api = {
    * Health check: GET /api/health
    */
   async health(): Promise<{ isOnline: boolean; data: HealthResponse }> {
+    if (MOCK_MODE) {
+      return {
+        isOnline: false,
+        data: {
+          status: "mock",
+          mock: true,
+          ledger_type: mockEngine.mode.ledger_type,
+          version: "mock",
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
     try {
       const res = await fetch(`${API_BASE}/api/health`, {
         method: "GET",
@@ -360,14 +374,13 @@ export const api = {
       const data: HealthResponse = await res.json();
       return { isOnline: true, data };
     } catch {
-      // Backend not running on :8000 -> gracefully return mock state
+      // Backend unreachable: report offline honestly. Do NOT fake a ledger state.
       return {
         isOnline: false,
         data: {
-          status: "simulated_local",
-          mock: mockEngine.mode.mock,
-          ledger_type: mockEngine.mode.ledger_type,
-          version: "1.0.0-soc",
+          status: "offline",
+          mock: false,
+          ledger_type: "local",
           timestamp: new Date().toISOString(),
         },
       };
@@ -378,39 +391,28 @@ export const api = {
    * Fetch windows: GET /api/windows
    */
   async windows(): Promise<{ mock: boolean; ledger_type: string; windows: WindowObject[] }> {
+    if (MOCK_MODE) {
+      const v = await mockEngine.verify();
+      return { mock: v.mock, ledger_type: v.ledger_type, windows: v.windows };
+    }
+    let res: Response;
     try {
-      const res = await fetch(`${API_BASE}/api/windows`, {
+      res = await fetch(`${API_BASE}/api/windows`, {
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(3000),
       });
-      if (!res.ok) throw new Error(res.statusText);
-      return await res.json();
     } catch {
-      const v = await mockEngine.verify();
-      return {
-        mock: v.mock,
-        ledger_type: v.ledger_type,
-        windows: v.windows,
-      };
+      throw new Error(`Cannot reach backend at ${API_BASE}`);
     }
+    if (!res.ok) throw new Error(`Backend error ${res.status} ${res.statusText}`);
+    return await res.json();
   },
 
   /**
    * Anchor logs: POST /api/anchor
    */
   async anchor(): Promise<{ mock: boolean; ledger_type: string; count: number; windows?: WindowObject[] }> {
-    try {
-      const res = await fetch(`${API_BASE}/api/anchor`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
-        signal: AbortSignal.timeout(4000),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || res.statusText);
-      }
-      return await res.json();
-    } catch {
+    if (MOCK_MODE) {
       mockEngine.anchored = true;
       await mockEngine.computeAnchors();
       return {
@@ -419,65 +421,73 @@ export const api = {
         count: INITIAL_WINDOWS.length,
       };
     }
+    let res: Response;
+    try {
+      res = await fetch(`${API_BASE}/api/anchor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
+        signal: AbortSignal.timeout(4000),
+      });
+    } catch {
+      throw new Error(`Cannot reach backend at ${API_BASE}`);
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Backend error ${res.status} ${res.statusText}`);
+    }
+    return await res.json();
   },
 
   /**
    * Verify integrity: POST /api/verify
    */
   async verify(): Promise<VerifyResponse> {
+    if (MOCK_MODE) return await mockEngine.verify();
+    let res: Response;
     try {
-      const res = await fetch(`${API_BASE}/api/verify`, {
+      res = await fetch(`${API_BASE}/api/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
         signal: AbortSignal.timeout(4000),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || res.statusText);
-      }
-      return await res.json();
     } catch {
-      return await mockEngine.verify();
+      throw new Error(`Cannot reach backend at ${API_BASE}`);
     }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Backend error ${res.status} ${res.statusText}`);
+    }
+    return await res.json();
   },
 
   /**
    * Tamper simulation: POST /api/tamper-demo
    */
   async tamper(windowIndex: number, action: "modify" | "delete"): Promise<TamperResponse> {
+    if (MOCK_MODE) return mockEngine.tamper(windowIndex, action);
+    let res: Response;
     try {
-      const res = await fetch(`${API_BASE}/api/tamper-demo`, {
+      res = await fetch(`${API_BASE}/api/tamper-demo`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
         body: JSON.stringify({ window_index: windowIndex, action }),
         signal: AbortSignal.timeout(4000),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || res.statusText);
-      }
-      return await res.json();
     } catch {
-      return mockEngine.tamper(windowIndex, action);
+      throw new Error(`Cannot reach backend at ${API_BASE}`);
     }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Backend error ${res.status} ${res.statusText}`);
+    }
+    return await res.json();
   },
 
   /**
    * Reset demo: POST /api/reset-demo
    */
   async reset(): Promise<{ mock: boolean; status: string; message: string }> {
-    try {
-      const res = await fetch(`${API_BASE}/api/reset-demo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
-        signal: AbortSignal.timeout(4000),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || res.statusText);
-      }
-      return await res.json();
-    } catch {
+    if (MOCK_MODE) {
       mockEngine.reset();
       return {
         mock: mockEngine.mode.mock,
@@ -485,6 +495,21 @@ export const api = {
         message: "Demo logs and ledger restored to initial clean state.",
       };
     }
+    let res: Response;
+    try {
+      res = await fetch(`${API_BASE}/api/reset-demo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-API-Key": API_KEY },
+        signal: AbortSignal.timeout(4000),
+      });
+    } catch {
+      throw new Error(`Cannot reach backend at ${API_BASE}`);
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Backend error ${res.status} ${res.statusText}`);
+    }
+    return await res.json();
   },
 
   /**

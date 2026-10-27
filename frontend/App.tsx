@@ -9,7 +9,7 @@ import { Timeline } from "./components/Timeline";
 import { InspectDrawer } from "./components/InspectDrawer";
 import { AdminPanel } from "./components/AdminPanel";
 import { AdminLoginModal } from "./components/AdminLoginModal";
-import { api, WindowObject, VerifyResponse } from "./lib/api";
+import { api, WindowObject, VerifyResponse, MOCK_MODE } from "./lib/api";
 import { playSuccess, playAlarm, playClick } from "./lib/sound";
 import { Shield, Sparkles, Lock } from "lucide-react";
 
@@ -22,8 +22,8 @@ export default function App() {
   });
 
   // Verification & Forensic State
-  const [overall, setOverall] = useState<"INTACT" | "COMPROMISED" | "NO_ANCHORS" | null>("INTACT");
-  const [summary, setSummary] = useState({ intact: 3, tampered: 0, missing: 0, unanchored: 0 });
+  const [overall, setOverall] = useState<"INTACT" | "COMPROMISED" | "NO_ANCHORS" | null>(null);
+  const [summary, setSummary] = useState({ intact: 0, tampered: 0, missing: 0, unanchored: 0 });
   const [firstBreak, setFirstBreak] = useState<VerifyResponse["first_break"]>(null);
   const [chainBrokenFrom, setChainBrokenFrom] = useState<string | null>(null);
   const [windows, setWindows] = useState<WindowObject[]>([]);
@@ -254,6 +254,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F7F4EE] text-[#2A2421] vintage-paper-bg relative selection:bg-[#A07855]/20 selection:text-[#A07855] scroll-smooth font-sans">
+      {/* MOCK MODE BANNER: only shown when VITE_MOCK_MODE=true. Makes it unmistakable
+          that the data is simulated in the browser, NOT from the real backend. */}
+      {MOCK_MODE && (
+        <div className="fixed top-0 inset-x-0 z-[100] bg-[#BA4A38] text-white text-center font-mono font-bold text-xs sm:text-sm py-2.5 px-4 shadow-lg border-b-2 border-white/30">
+          ⚠ MOCK DATA — NOT the real backend. All results are simulated in your browser (VITE_MOCK_MODE=true).
+        </div>
+      )}
       {/* ────────────────────────────────────────────────────────────────
           1. FRONT PAGE HERO: Interactive Liquid Sculpture Hero
           Configured with Vintage Paper remix palette, backdropText="Sentinel",

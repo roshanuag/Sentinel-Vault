@@ -145,11 +145,10 @@ Report each as PASS, FAIL or NOT TESTED:
 
 The main flow has been tested end to end, real vs mock status is clear, failures are handled, startup instructions work after a fresh restart, and I can explain what is and is not working.
 
-## Git Automation Rules
-- After completing any logical unit of work, feature implementation, or bug fix:
+## Git Rules
+- After completing a logical unit of work, feature, or bug fix:
   1. Run `git status` to verify modified and untracked files.
-  2. Run `git add .` to stage all changes.
+  2. Stage only the files you changed, by name (`git add <path> ...`). Do not run `git add .`.
   3. Commit using clean conventional format: `git commit -m "<message>"`.
-  4. CRITICAL: Never include `Co-authored-by:`, AI attributions, or automated trailers in git commit messages. Only use standard commit messages under your author credentials.
-  5. Immediately push to GitHub: `git push origin main`.
-- Never leave unstaged or uncommitted code at the end of a response.
+  4. AI use is disclosed in `README.md`.
+- Do not push automatically. Pushes need my approval.

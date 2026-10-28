@@ -7,7 +7,7 @@
 
 ## 1. System Overview & Product Intent
 
-**SentinelVault** is a tamper-proof security log vault. Ordinary log servers fail when an attacker with root access alters or deletes log files to erase breach evidence. SentinelVault chops server logs into **5-minute deterministic time windows**, fingerprints each window with chained **SHA-256 hashes** (mini-blockchain), and anchors fingerprints to an **append-only ledger** (local SQLite database with update/delete triggers blocked or an EVM smart contract on-chain).
+**SentinelVault** is a tamper-evident security log vault. Ordinary log servers fail when an attacker with root access alters or deletes log files to erase breach evidence. SentinelVault chops server logs into **5-minute deterministic time windows**, fingerprints each window with chained **SHA-256 hashes** (mini-blockchain), and anchors fingerprints to an **append-only ledger** (local SQLite database with update/delete triggers blocked or an EVM smart contract on-chain).
 
 ### Purpose of the Frontend
 The frontend is a **high-tech Security Operations Center (SOC) forensics dashboard**. It must:

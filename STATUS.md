@@ -12,7 +12,7 @@ frontend teammate.
 
 **Backend is feature-complete, hardened, and tested.** Pipeline: collector →
 chained SHA-256 hashing → append-only SQLite ledger **or** on-chain EVM anchor →
-verifier (+ SOC alerts) → hardened FastAPI. 24 passing tests; CI green.
+verifier (+ SOC alerts) → hardened FastAPI. 24 tests pass locally (local-ledger path); CI configured in `.github/workflows/ci.yml`.
 
 ## What works (real, not mock)
 
@@ -37,7 +37,7 @@ verifier (+ SOC alerts) → hardened FastAPI. 24 passing tests; CI green.
 - Delete a line in Window 1 → verify → Window 1 `TAMPERED` ("line count 4 → 3, likely deleted").
 - Ledger UPDATE and DELETE both rejected by triggers.
 - EVM adapter (local ganache): deploy → `anchorWindow` ×3 → read-back all match → re-anchor **reverts** (append-only on-chain); verify results **identical** to local; unreachable-RPC falls back to local without crashing.
-- Full API suite passes in both local and testnet/EVM modes; CI green on `main`.
+- 24 tests pass locally (local-ledger path); CI configured in `.github/workflows/ci.yml`.
 
 ## What is REAL vs SIMULATED (mock honesty)
 

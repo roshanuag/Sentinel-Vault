@@ -1,6 +1,6 @@
-# SentinelVault — Tamper-Proof Security Log Vault
+# SentinelVault: Tamper-Evident Security Log Vault
 
-**Prove your logs are the ones you originally wrote — even against an attacker with full root access.**
+**Prove your logs haven't been changed since you anchored them: tamper-evident locally, with public-chain anchoring as the path to root-resistance.**
 
 Graphite 26 · Problem Statement 9 · Cybersecurity track.
 

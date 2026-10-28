@@ -398,7 +398,7 @@ export default function App() {
           ]}
           navCta={{
             label: "GitHub",
-            href: "https://github.com/roshanuag/Tamper-Proof-Security-Log-Vault",
+            href: "https://github.com/roshanuag/Sentinel-Vault",
             external: true,
           }}
         />

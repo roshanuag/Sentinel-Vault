@@ -4,7 +4,7 @@
 
 Graphite 26 · Problem Statement 9 · Cybersecurity track.
 
-![CI](https://github.com/roshanuag/Tamper-Proof-Security-Log-Vault/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/roshanuag/Sentinel-Vault/actions/workflows/ci.yml/badge.svg)
 
 ---
 

@@ -129,7 +129,7 @@ Runs python:3.13-slim as a non-root user, seeds the demo log, starts the API. (N
 - EVM mode also needs a local chain: **ganache** via `npx ganache` (uses Node). web3 installed with **no C compiler** (the in-memory py-evm tester needs MSVC Build Tools and is NOT usable here — so we use ganache).
 - Env vars: `LEDGER_BACKEND` (local|testnet), `RPC_URL`, `PRIVATE_KEY`, `CONTRACT_ADDRESS`, `VAULT_API_KEY`, `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`, plus `LOG_PATH`, `DB_PATH`, `WINDOW_SECONDS`, `FRONTEND_ORIGIN`.
 - Server runs on `http://localhost:8000`. Interactive docs at `/docs`.
-- git 2.55, remote: origin → GitHub (roshanuag/Tamper-Proof-Security-Log-Vault).
+- git 2.55, remote: origin → GitHub (roshanuag/Sentinel-Vault).
 - OS: Windows 11.
 
 ## Known issues / notes
